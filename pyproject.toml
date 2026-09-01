@@ -32,6 +32,7 @@ dev = [
 
 [project.scripts]
 rci = "rci.app:main"
+rci-hil-readiness = "rci.hil.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/rci"]
