@@ -117,8 +117,18 @@ describe("RCI operational dashboard", () => {
   it("renders verified CharacterResponse semantics without implying physical authorization", () => {
     render(<App snapshot={snapshot()} characterResponse={characterResponse()} />);
 
-    expect(screen.getByText("I can present the verified plan.")).toBeTruthy();
-    expect(screen.getByText("present (optional)")).toBeTruthy();
+    expect(
+      screen.getByText((_, element) =>
+        element?.tagName === "P" &&
+        element.textContent?.includes("I can present the verified plan.") === true,
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText((_, element) =>
+        element?.tagName === "DD" &&
+        element.textContent?.replace(/\s+/g, " ").trim() === "present (optional)",
+      ),
+    ).toBeTruthy();
     expect(screen.getByText("Durable")).toBeTruthy();
     expect(
       screen.getByText(/physical motion remains subject to deterministic safety/i),
