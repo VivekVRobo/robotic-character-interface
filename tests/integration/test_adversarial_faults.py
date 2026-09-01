@@ -157,9 +157,7 @@ async def _send_firmware_heartbeat(
 async def _send_plain_ack(link: SimulatedProtocolLink) -> None:
     request = await link.device.receive_frame(timeout_s=1.0)
     acknowledgement = Acknowledgement(request.sequence, AckStatus.OK)
-    await link.device.send_frame(
-        Frame(MessageType.ACK, request.sequence, acknowledgement.encode())
-    )
+    await link.device.send_frame(Frame(MessageType.ACK, request.sequence, acknowledgement.encode()))
 
 
 def test_unverified_aurelia_payload_is_rejected(
