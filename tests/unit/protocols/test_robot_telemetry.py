@@ -27,6 +27,17 @@ def test_robot_telemetry_round_trip() -> None:
     assert RobotTelemetry.decode(telemetry.encode()) == telemetry
 
 
+def test_robot_telemetry_matches_cross_language_golden_bytes() -> None:
+    expected = bytes.fromhex(
+        "40 e2 01 00 06 03 70 17 04 "
+        "01 e2 04 f0 00 d2 00 "
+        "02 a2 fe 88 ff b4 00 "
+        "03 5a 23 00 00 5f 00 "
+        "04 d0 07 0f 00 6e 00"
+    )
+    assert _telemetry().encode() == expected
+
+
 def test_robot_telemetry_rejects_duplicate_joint_ids() -> None:
     telemetry = _telemetry()
     duplicate = RobotTelemetry(
