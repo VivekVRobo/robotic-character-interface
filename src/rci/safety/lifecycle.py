@@ -82,7 +82,9 @@ class SafetyLifecycleController:
 
     def __init__(self, policy: SafetyLifecyclePolicy) -> None:
         if not policy.valid:
-            raise ValueError("safety lifecycle policy must require manual reset and a positive timeout")
+            raise ValueError(
+                "safety lifecycle policy must require manual reset and a positive timeout"
+            )
         self._policy = policy
         self._snapshot = SafetyLifecycleSnapshot()
 
