@@ -13,6 +13,10 @@ class ProtocolError(RCIError):
     """A communication packet or protocol transition is invalid."""
 
 
+class ProtocolChecksumError(ProtocolError):
+    """A protocol frame failed checksum validation."""
+
+
 class HardwareError(RCIError):
     """A hardware transport or device operation failed."""
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from struct import Struct
 
-from rci.domain.errors import ProtocolError
+from rci.domain.errors import ProtocolChecksumError, ProtocolError
 from rci.protocols.checksums import crc16_ccitt_false
 from rci.protocols.constants import (
     CRC_SIZE,
@@ -74,7 +74,7 @@ class Frame:
         (received_crc,) = _CRC.unpack_from(data, payload_end)
         calculated_crc = crc16_ccitt_false(data[:payload_end])
         if received_crc != calculated_crc:
-            raise ProtocolError("frame checksum mismatch")
+            raise ProtocolChecksumError("frame checksum mismatch")
 
         return cls(message_type=message_type, sequence=sequence, payload=payload)
 
