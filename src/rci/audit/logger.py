@@ -92,7 +92,8 @@ class AuditLogger:
             return []
         entries: list[AuditEntry] = []
         try:
-            for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            lines = path.read_text(encoding="utf-8").splitlines()
+            for line_number, line in enumerate(lines, start=1):
                 if not line.strip():
                     continue
                 try:
