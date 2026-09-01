@@ -139,9 +139,7 @@ class ValidatedMotionCommand:
             _require_uint("joint_id", target.joint_id, 8)
             _require_int16("target_cdeg", target.target_cdeg)
             payload.extend(_JOINT_TARGET.pack(target.joint_id, target.target_cdeg))
-        payload.extend(
-            _MOTION_TAIL.pack(self.max_velocity_cdeg_s, self.max_acceleration_cdeg_s2)
-        )
+        payload.extend(_MOTION_TAIL.pack(self.max_velocity_cdeg_s, self.max_acceleration_cdeg_s2))
         return bytes(payload)
 
     @classmethod
@@ -155,10 +153,7 @@ class ValidatedMotionCommand:
         if not 1 <= joint_count <= MAX_JOINT_TARGETS:
             raise ProtocolError("motion command has invalid joint target count")
         expected_size = (
-            16
-            + _MOTION_HEAD.size
-            + joint_count * _JOINT_TARGET.size
-            + _MOTION_TAIL.size
+            16 + _MOTION_HEAD.size + joint_count * _JOINT_TARGET.size + _MOTION_TAIL.size
         )
         if len(payload) != expected_size:
             raise ProtocolError("motion command payload length mismatch")
