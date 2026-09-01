@@ -16,6 +16,7 @@ constexpr uint16_t kMaxPayloadSize = 512;
 constexpr size_t kNrf24MaxFrameSize = 32;
 constexpr size_t kGloveTelemetryPayloadSize = 21;
 constexpr size_t kGloveTelemetryFrameSize = kFrameOverhead + kGloveTelemetryPayloadSize;
+constexpr size_t kAcknowledgementPayloadSize = 3;
 
 static_assert(kGloveTelemetryFrameSize <= kNrf24MaxFrameSize,
               "Glove telemetry frame must fit one nRF24 payload");
@@ -28,6 +29,13 @@ enum class MessageType : uint8_t {
   kAck = 0x05,
   kNack = 0x06,
   kRobotTelemetry = 0x07,
+};
+
+enum class AckStatus : uint8_t {
+  kOk = 0x00,
+  kRejected = 0x01,
+  kStale = 0x02,
+  kInvalid = 0x03,
 };
 
 struct GloveTelemetry {
@@ -66,6 +74,18 @@ inline uint16_t Crc16CcittFalse(const uint8_t* data, size_t length) {
     }
   }
   return crc;
+}
+
+inline size_t EncodeAcknowledgementPayload(uint16_t acknowledged_sequence,
+                                           AckStatus status,
+                                           uint8_t* out,
+                                           size_t capacity) {
+  if (out == nullptr || capacity < kAcknowledgementPayloadSize) {
+    return 0;
+  }
+  WriteU16Le(out, acknowledged_sequence);
+  out[2] = static_cast<uint8_t>(status);
+  return kAcknowledgementPayloadSize;
 }
 
 inline size_t EncodeGloveTelemetryPayload(const GloveTelemetry& telemetry,
