@@ -39,9 +39,7 @@ class JointConstraint:
     @property
     def complete(self) -> bool:
         return (
-            self.min_deg is not None
-            and self.max_deg is not None
-            and self.neutral_deg is not None
+            self.min_deg is not None and self.max_deg is not None and self.neutral_deg is not None
         )
 
     @property
