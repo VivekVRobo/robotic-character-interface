@@ -64,6 +64,7 @@ class RobotSettings(BaseModel):
 
 class ServoJointSettings(BaseModel):
     channel: int = Field(ge=0, le=15)
+    protocol_id: int | None = Field(default=None, ge=1, le=255)
     min_deg: float | None = None
     max_deg: float | None = None
     neutral_deg: float | None = None
