@@ -38,8 +38,7 @@ class RobotModel:
             spec = self.profile.joints[name]
             if not spec.lower_deg <= value <= spec.upper_deg:
                 raise RobotModelError(
-                    f"joint {name} target {value} is outside "
-                    f"[{spec.lower_deg}, {spec.upper_deg}]"
+                    f"joint {name} target {value} is outside [{spec.lower_deg}, {spec.upper_deg}]"
                 )
 
     def within_limits(self, joints_deg: dict[str, float]) -> bool:
