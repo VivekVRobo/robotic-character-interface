@@ -9,6 +9,10 @@ namespace rci {
 namespace robot {
 
 constexpr uint32_t kDefaultHeartbeatTimeoutMs = 500u;
+constexpr uint8_t kPositionMotionMode = 0x01u;
+constexpr uint8_t kMaxJointTargets = 8u;
+constexpr size_t kMotionFixedPayloadSize = 16u + 4u + 4u;
+constexpr size_t kJointTargetPayloadSize = 3u;
 
 enum class RuntimeState : uint8_t {
   kSafe = 0,
@@ -23,6 +27,7 @@ enum class DispatchResult : uint8_t {
   kMotionDeferred = 3,
   kMotionRejectedUnsafe = 4,
   kMessageIgnored = 5,
+  kMotionRejectedInvalidPayload = 6,
 };
 
 struct ParsedFrame {
@@ -82,6 +87,57 @@ inline bool ParseFrame(const uint8_t* data, size_t length, ParsedFrame* out) {
   return true;
 }
 
+inline bool ValidateMotionPayload(const uint8_t* payload, uint16_t payload_length) {
+  if (payload == nullptr || payload_length < kMotionFixedPayloadSize + kJointTargetPayloadSize) {
+    return false;
+  }
+
+  const uint16_t ttl_ms = ReadU16Le(payload + 16);
+  const uint8_t mode = payload[18];
+  const uint8_t joint_count = payload[19];
+  if (ttl_ms == 0u || mode != kPositionMotionMode || joint_count == 0u ||
+      joint_count > kMaxJointTargets) {
+    return false;
+  }
+
+  const size_t expected_size = kMotionFixedPayloadSize +
+                               static_cast<size_t>(joint_count) * kJointTargetPayloadSize;
+  if (payload_length != expected_size) {
+    return false;
+  }
+
+  bool seen_joint_ids[256] = {};
+  size_t offset = 20u;
+  for (uint8_t i = 0; i < joint_count; ++i) {
+    const uint8_t joint_id = payload[offset];
+    if (joint_id == 0u || seen_joint_ids[joint_id]) {
+      return false;
+    }
+    seen_joint_ids[joint_id] = true;
+    offset += kJointTargetPayloadSize;
+  }
+
+  const uint16_t max_velocity = ReadU16Le(payload + offset);
+  const uint16_t max_acceleration = ReadU16Le(payload + offset + 2u);
+  return max_velocity > 0u && max_acceleration > 0u;
+}
+
+inline protocol::AckStatus AckStatusForDispatch(DispatchResult result) {
+  switch (result) {
+    case DispatchResult::kHeartbeatAccepted:
+    case DispatchResult::kEstopLatched:
+    case DispatchResult::kMotionDeferred:
+      return protocol::AckStatus::kOk;
+    case DispatchResult::kMotionRejectedUnsafe:
+      return protocol::AckStatus::kRejected;
+    case DispatchResult::kMotionRejectedInvalidPayload:
+    case DispatchResult::kMessageIgnored:
+    case DispatchResult::kRejectedInvalidFrame:
+      return protocol::AckStatus::kInvalid;
+  }
+  return protocol::AckStatus::kInvalid;
+}
+
 class RobotRuntime {
  public:
   explicit RobotRuntime(uint32_t heartbeat_timeout_ms = kDefaultHeartbeatTimeoutMs)
@@ -138,13 +194,17 @@ class RobotRuntime {
         return DispatchResult::kEstopLatched;
 
       case protocol::MessageType::kValidatedMotionCommand:
+        if (!ValidateMotionPayload(frame.payload, frame.payload_length)) {
+          return DispatchResult::kMotionRejectedInvalidPayload;
+        }
         Tick(now_ms);
         if (state_ != RuntimeState::kReady || !heartbeat_healthy_ ||
             physical_estop_active_) {
           return DispatchResult::kMotionRejectedUnsafe;
         }
-        // PR-012 intentionally has no actuator layer. A validated command can
-        // reach this boundary, but execution remains deferred until later HIL.
+        // The payload is structurally valid and the independent watchdog is
+        // healthy, but PR-013 still has no actuator layer. Execution remains
+        // deferred until explicit HIL and firmware-side joint safety exist.
         return DispatchResult::kMotionDeferred;
 
       default:
