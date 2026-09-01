@@ -108,9 +108,7 @@ class SafetyLifecycleController:
         current = self._snapshot
         updated = SafetyLifecycleSnapshot(
             sequence=current.sequence + 1,
-            watchdog_armed=(
-                current.watchdog_armed if watchdog_armed is None else watchdog_armed
-            ),
+            watchdog_armed=(current.watchdog_armed if watchdog_armed is None else watchdog_armed),
             watchdog_healthy=(
                 current.watchdog_healthy if watchdog_healthy is None else watchdog_healthy
             ),
@@ -119,9 +117,7 @@ class SafetyLifecycleController:
                 if physical_estop_active is None
                 else physical_estop_active
             ),
-            estop_latched=(
-                current.estop_latched if estop_latched is None else estop_latched
-            ),
+            estop_latched=(current.estop_latched if estop_latched is None else estop_latched),
             causes=current.causes if causes is None else causes,
             latest_reason=current.latest_reason if latest_reason is None else latest_reason,
         )
