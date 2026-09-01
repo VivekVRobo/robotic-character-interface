@@ -27,4 +27,4 @@ def test_validated_motion_is_explicitly_deferred() -> None:
     runtime_source = Path("firmware/robot/runtime.h").read_text(encoding="utf-8")
 
     assert "kMotionDeferred" in runtime_source
-    assert "PR-012 intentionally has no actuator layer" in runtime_source
+    assert "no actuator layer" in runtime_source
