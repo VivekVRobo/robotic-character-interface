@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from pydantic import ValidationError
@@ -11,15 +11,19 @@ from rci.hil.models import (
     ElectricalEvidence,
     EvidenceKind,
     EvidenceReference,
+    HilRunOutcome,
+    HilTargetObservation,
     MechanicalEvidence,
     ServoCalibrationEvidence,
     SingleServoHilEvidence,
+    SingleServoHilRunResult,
     evidence_digest,
 )
 
 
 _HASH_A = "a" * 64
 _HASH_B = "b" * 64
+_HASH_C = "c" * 64
 
 
 def _calibration(**overrides: object) -> ServoCalibrationEvidence:
@@ -182,3 +186,89 @@ def test_evidence_digest_changes_when_measured_values_change() -> None:
     first = _evidence()
     second = _evidence(calibration=_calibration(max_test_step_deg=1.0))
     assert evidence_digest(first) != evidence_digest(second)
+
+
+def test_post_run_pass_requires_physical_observation_and_recovery_evidence() -> None:
+    started = datetime(2026, 9, 2, tzinfo=UTC)
+    result = SingleServoHilRunResult(
+        evidence_sha256=evidence_digest(_evidence()),
+        joint_name="base",
+        started_at=started,
+        completed_at=started + timedelta(seconds=30),
+        outcome=HilRunOutcome.PASS,
+        observations=(
+            HilTargetObservation(
+                commanded_angle_deg=2.0,
+                observed_angle_deg=1.9,
+                commanded_pulse_us=1513,
+                observed_current_a=0.18,
+            ),
+        ),
+        estop_response_verified=True,
+        power_cut_response_verified=True,
+        unexpected_motion=False,
+        evidence_refs=(
+            EvidenceReference(
+                kind=EvidenceKind.MEASUREMENT,
+                uri="evidence/hil-run.csv",
+                sha256=_HASH_B,
+            ),
+            EvidenceReference(
+                kind=EvidenceKind.VIDEO,
+                uri="evidence/hil-run.mp4",
+                sha256=_HASH_C,
+            ),
+        ),
+    )
+    assert result.outcome is HilRunOutcome.PASS
+
+
+def test_post_run_pass_rejects_unexpected_motion_or_missing_recovery_checks() -> None:
+    started = datetime(2026, 9, 2, tzinfo=UTC)
+    common: dict[str, object] = {
+        "evidence_sha256": evidence_digest(_evidence()),
+        "joint_name": "base",
+        "started_at": started,
+        "completed_at": started + timedelta(seconds=5),
+        "outcome": HilRunOutcome.PASS,
+        "observations": (
+            HilTargetObservation(
+                commanded_angle_deg=1.0,
+                observed_angle_deg=1.0,
+                commanded_pulse_us=1507,
+                observed_current_a=0.15,
+            ),
+        ),
+        "evidence_refs": (
+            EvidenceReference(
+                kind=EvidenceKind.MEASUREMENT,
+                uri="evidence/hil-run.csv",
+                sha256=_HASH_B,
+            ),
+            EvidenceReference(
+                kind=EvidenceKind.TELEMETRY,
+                uri="evidence/hil-run.jsonl",
+                sha256=_HASH_C,
+            ),
+        ),
+    }
+
+    with pytest.raises(ValidationError, match="unexpected motion"):
+        SingleServoHilRunResult.model_validate(
+            {
+                **common,
+                "estop_response_verified": True,
+                "power_cut_response_verified": True,
+                "unexpected_motion": True,
+            }
+        )
+
+    with pytest.raises(ValidationError, match="E-stop and power-cut"):
+        SingleServoHilRunResult.model_validate(
+            {
+                **common,
+                "estop_response_verified": False,
+                "power_cut_response_verified": True,
+                "unexpected_motion": False,
+            }
+        )
