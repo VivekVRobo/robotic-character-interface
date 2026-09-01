@@ -24,10 +24,7 @@ class Kinematics:
         elbow = radians(joints_deg["elbow"])
         distal = geometry.forearm_link_mm + geometry.tool_length_mm
 
-        radial = (
-            geometry.shoulder_link_mm * cos(shoulder)
-            + distal * cos(shoulder + elbow)
-        )
+        radial = geometry.shoulder_link_mm * cos(shoulder) + distal * cos(shoulder + elbow)
         z_mm = (
             geometry.base_height_mm
             + geometry.shoulder_link_mm * sin(shoulder)
@@ -62,9 +59,7 @@ class Kinematics:
         elbow_magnitude = acos(cosine_elbow)
         candidates: list[JointSolution] = []
         requested_gripper = (
-            self.model.profile.joints["gripper"].home_deg
-            if gripper_deg is None
-            else gripper_deg
+            self.model.profile.joints["gripper"].home_deg if gripper_deg is None else gripper_deg
         )
         for elbow in (elbow_magnitude, -elbow_magnitude):
             shoulder = atan2(vertical, radial) - atan2(
