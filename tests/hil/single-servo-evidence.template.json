@@ -1,0 +1,49 @@
+{
+  "schema_version": "rci.single_servo_hil_evidence.v1",
+  "recorded_at": "REPLACE_WITH_UTC_TIMESTAMP",
+  "operator": "REPLACE_WITH_OPERATOR",
+  "calibration": {
+    "joint_name": "base",
+    "servo_model": "REPLACE_WITH_ACTUAL_SERVO_MODEL",
+    "driver": "PCA9685",
+    "pwm_frequency_hz": 50.0,
+    "channel": 0,
+    "protocol_id": 1,
+    "lower_angle_deg": null,
+    "neutral_angle_deg": null,
+    "upper_angle_deg": null,
+    "lower_pulse_us": null,
+    "neutral_pulse_us": null,
+    "upper_pulse_us": null,
+    "test_lower_angle_deg": null,
+    "test_upper_angle_deg": null,
+    "max_test_step_deg": null
+  },
+  "electrical": {
+    "actuator_supply_voltage_v": null,
+    "logic_supply_voltage_v": null,
+    "current_limit_a": null,
+    "common_ground_verified": false,
+    "actuator_logic_rails_separate": false,
+    "independent_estop_verified": false,
+    "power_cut_verified": false
+  },
+  "mechanical": {
+    "servo_secured": false,
+    "load_path_clear": false,
+    "manual_range_check_verified": false,
+    "hard_stop_clearance_verified": false
+  },
+  "evidence_refs": [
+    {
+      "kind": "wiring",
+      "uri": "REPLACE_WITH_WIRING_ARTIFACT_PATH",
+      "sha256": "REPLACE_WITH_64_HEX_SHA256"
+    },
+    {
+      "kind": "measurement",
+      "uri": "REPLACE_WITH_MEASUREMENT_ARTIFACT_PATH",
+      "sha256": "REPLACE_WITH_64_HEX_SHA256"
+    }
+  ]
+}

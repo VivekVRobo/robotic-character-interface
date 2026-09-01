@@ -23,3 +23,8 @@ jobs:
           g++ -std=c++17 -Wall -Wextra -Werror -pedantic \
             tests/contract/robot_firmware_runtime.cpp -o /tmp/rci_robot_runtime
           /tmp/rci_robot_runtime
+      - name: Single-servo HIL firmware guard
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror -pedantic \
+            tests/contract/single_servo_hil_guard.cpp -o /tmp/rci_single_servo_hil_guard
+          /tmp/rci_single_servo_hil_guard
