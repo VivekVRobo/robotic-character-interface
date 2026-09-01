@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 ALLOWED_VALIDATED_MOTION_CONSTRUCTORS = {
     Path("src/rci/hardware/robot_gateway.py"),
     Path("src/rci/protocols/messages.py"),
