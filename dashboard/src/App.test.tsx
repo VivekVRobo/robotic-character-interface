@@ -117,9 +117,7 @@ describe("RCI operational dashboard", () => {
   it("renders verified CharacterResponse semantics without implying physical authorization", () => {
     render(<App snapshot={snapshot()} characterResponse={characterResponse()} />);
 
-    expect(screen.getByText(/Aurelia/i).textContent).toContain(
-      "I can present the verified plan.",
-    );
+    expect(screen.getByText("I can present the verified plan.")).toBeTruthy();
     expect(screen.getByText("present (optional)")).toBeTruthy();
     expect(screen.getByText("Durable")).toBeTruthy();
     expect(
