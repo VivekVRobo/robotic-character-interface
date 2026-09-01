@@ -39,9 +39,7 @@ def test_hil_permit_is_not_consumed_by_normal_application_modules() -> None:
 
 
 def test_hil_firmware_guard_contains_no_actuator_write_api() -> None:
-    source = (ROOT / "firmware" / "robot" / "hil_single_servo.h").read_text(
-        encoding="utf-8"
-    )
+    source = (ROOT / "firmware" / "robot" / "hil_single_servo.h").read_text(encoding="utf-8")
     assert "kEligibleForDriverLayer" in source
     assert "setPWM(" not in source
     assert "analogWrite(" not in source
