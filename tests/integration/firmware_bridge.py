@@ -19,6 +19,7 @@ class FirmwareDispatch(IntEnum):
     MOTION_REJECTED_UNSAFE = 4
     MESSAGE_IGNORED = 5
     MOTION_REJECTED_INVALID_PAYLOAD = 6
+    REJECTED_REPLAY = 7
 
 
 @dataclass(frozen=True, slots=True)
