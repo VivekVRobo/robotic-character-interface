@@ -70,9 +70,7 @@ LEGAL_TRANSITIONS: Final[dict[SystemState, frozenset[SystemState]]] = {
             SystemState.SHUTDOWN,
         }
     ),
-    SystemState.FAULT: frozenset(
-        {SystemState.SELF_TEST, SystemState.ESTOP, SystemState.SHUTDOWN}
-    ),
+    SystemState.FAULT: frozenset({SystemState.SELF_TEST, SystemState.ESTOP, SystemState.SHUTDOWN}),
     SystemState.ESTOP: frozenset({SystemState.SELF_TEST, SystemState.SHUTDOWN}),
     SystemState.SHUTDOWN: frozenset(),
 }
