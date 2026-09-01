@@ -12,9 +12,7 @@ def test_physical_robot_firmware_does_not_include_digital_twin() -> None:
 
 
 def test_digital_twin_only_consumes_semantic_validated_motion_commands() -> None:
-    source = (ROOT / "src" / "rci" / "simulation" / "digital_twin.py").read_text(
-        encoding="utf-8"
-    )
+    source = (ROOT / "src" / "rci" / "simulation" / "digital_twin.py").read_text(encoding="utf-8")
     assert "ValidatedMotionCommand" in source
     assert "setPWM(" not in source
     assert "analogWrite(" not in source
