@@ -8,10 +8,10 @@ from typing import cast
 from unittest.mock import patch
 
 import pytest
-
 from aurelia.llm.ollama_cortex import LocalOllamaCortex
 from aurelia.runtime.api_contract import serialize_cognitive_cycle
 from aurelia.runtime.cognitive_runtime import AureliaCognitiveRuntime
+
 from rci.behavior import BehaviorIntent, BehaviorPlanner
 from rci.characters.contracts import MotionCue, parse_character_response
 from rci.domain.enums import SystemState
