@@ -31,9 +31,7 @@ def test_noncritical_failure_degrades_aggregate() -> None:
 
 
 def test_critical_failure_fails_aggregate() -> None:
-    components = [
-        ComponentHealth(component="robot", status=HealthStatus.FAILED, critical=True)
-    ]
+    components = [ComponentHealth(component="robot", status=HealthStatus.FAILED, critical=True)]
     assert aggregate_health(components) is HealthStatus.FAILED
 
 
