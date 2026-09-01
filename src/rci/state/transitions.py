@@ -88,4 +88,5 @@ def can_transition(current: SystemState, target: SystemState) -> bool:
 
 def validate_transition(current: SystemState, target: SystemState) -> None:
     if not can_transition(current, target):
-        raise InvalidStateTransition(f"illegal system transition: {current.value} -> {target.value}")
+        message = f"illegal system transition: {current.value} -> {target.value}"
+        raise InvalidStateTransition(message)
