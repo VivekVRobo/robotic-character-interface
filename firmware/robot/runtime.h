@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "../shared/protocol.h"
 
@@ -11,6 +12,7 @@ namespace robot {
 constexpr uint32_t kDefaultHeartbeatTimeoutMs = 500u;
 constexpr uint8_t kPositionMotionMode = 0x01u;
 constexpr uint8_t kMaxJointTargets = 8u;
+constexpr size_t kMotionCommandIdSize = 16u;
 constexpr size_t kMotionFixedPayloadSize = 16u + 4u + 4u;
 constexpr size_t kJointTargetPayloadSize = 3u;
 
@@ -28,6 +30,7 @@ enum class DispatchResult : uint8_t {
   kMotionRejectedUnsafe = 4,
   kMessageIgnored = 5,
   kMotionRejectedInvalidPayload = 6,
+  kRejectedReplay = 7,
 };
 
 struct ParsedFrame {
@@ -122,6 +125,11 @@ inline bool ValidateMotionPayload(const uint8_t* payload, uint16_t payload_lengt
   return max_velocity > 0u && max_acceleration > 0u;
 }
 
+inline bool SequenceIsFresh(uint16_t candidate, uint16_t previous) {
+  const uint16_t delta = static_cast<uint16_t>(candidate - previous);
+  return delta != 0u && delta < 0x8000u;
+}
+
 inline protocol::AckStatus AckStatusForDispatch(DispatchResult result) {
   switch (result) {
     case DispatchResult::kHeartbeatAccepted:
@@ -130,6 +138,8 @@ inline protocol::AckStatus AckStatusForDispatch(DispatchResult result) {
       return protocol::AckStatus::kOk;
     case DispatchResult::kMotionRejectedUnsafe:
       return protocol::AckStatus::kRejected;
+    case DispatchResult::kRejectedReplay:
+      return protocol::AckStatus::kStale;
     case DispatchResult::kMotionRejectedInvalidPayload:
     case DispatchResult::kMessageIgnored:
     case DispatchResult::kRejectedInvalidFrame:
@@ -147,6 +157,7 @@ class RobotRuntime {
   bool physical_estop_active() const { return physical_estop_active_; }
   bool heartbeat_seen() const { return heartbeat_seen_; }
   bool heartbeat_healthy() const { return heartbeat_healthy_; }
+  bool sequence_seen() const { return sequence_seen_; }
   uint16_t last_sequence() const { return last_sequence_; }
 
   void ObservePhysicalEstop(bool active) {
@@ -177,7 +188,11 @@ class RobotRuntime {
     if (!ParseFrame(data, length, &frame)) {
       return DispatchResult::kRejectedInvalidFrame;
     }
+    if (sequence_seen_ && !SequenceIsFresh(frame.sequence, last_sequence_)) {
+      return DispatchResult::kRejectedReplay;
+    }
 
+    sequence_seen_ = true;
     last_sequence_ = frame.sequence;
     switch (frame.type) {
       case protocol::MessageType::kHeartbeat:
@@ -202,8 +217,12 @@ class RobotRuntime {
             physical_estop_active_) {
           return DispatchResult::kMotionRejectedUnsafe;
         }
+        if (MotionCommandWasAccepted(frame.payload)) {
+          return DispatchResult::kRejectedReplay;
+        }
+        RememberMotionCommand(frame.payload);
         // The payload is structurally valid and the independent watchdog is
-        // healthy, but PR-013 still has no actuator layer. Execution remains
+        // healthy, but there is still no actuator layer. Execution remains
         // deferred until explicit HIL and firmware-side joint safety exist.
         return DispatchResult::kMotionDeferred;
 
@@ -222,11 +241,24 @@ class RobotRuntime {
   }
 
  private:
+  bool MotionCommandWasAccepted(const uint8_t* payload) const {
+    return motion_command_seen_ &&
+           memcmp(last_motion_command_id_, payload, kMotionCommandIdSize) == 0;
+  }
+
+  void RememberMotionCommand(const uint8_t* payload) {
+    memcpy(last_motion_command_id_, payload, kMotionCommandIdSize);
+    motion_command_seen_ = true;
+  }
+
   RuntimeState state_ = RuntimeState::kSafe;
   bool physical_estop_active_ = false;
   bool heartbeat_seen_ = false;
   bool heartbeat_healthy_ = false;
+  bool sequence_seen_ = false;
+  bool motion_command_seen_ = false;
   uint16_t last_sequence_ = 0;
+  uint8_t last_motion_command_id_[kMotionCommandIdSize] = {};
   uint32_t last_heartbeat_ms_ = 0;
   uint32_t heartbeat_timeout_ms_;
 };

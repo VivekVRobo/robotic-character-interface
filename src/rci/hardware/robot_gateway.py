@@ -220,7 +220,12 @@ class RobotGateway:
 
         async with self._request_lock:
             sequence = self._next_sequence()
-            await self._transport.send_frame(Frame(message_type, sequence, payload))
+            try:
+                await self._transport.send_frame(Frame(message_type, sequence, payload))
+            except Exception as exc:
+                raise RobotGatewayError(
+                    f"robot send failed for sequence {sequence}: {exc}"
+                ) from exc
             self._sent_count += 1
 
             try:

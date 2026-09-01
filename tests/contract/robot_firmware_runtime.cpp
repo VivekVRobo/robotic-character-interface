@@ -19,8 +19,13 @@ size_t Build(MessageType type, uint16_t sequence, uint8_t* out, size_t capacity)
   return BuildFrame(type, sequence, nullptr, 0, out, capacity);
 }
 
-size_t BuildValidMotion(uint16_t sequence, uint8_t* out, size_t capacity) {
+size_t BuildValidMotion(
+    uint16_t sequence,
+    uint8_t* out,
+    size_t capacity,
+    uint8_t command_marker = 0u) {
   uint8_t payload[27] = {};
+  payload[0] = command_marker;
   WriteU16Le(payload + 16, 250);
   payload[18] = 1;
   payload[19] = 1;
@@ -132,12 +137,60 @@ void TestMalformedMotionPayloadIsInvalidNotDeferred() {
   assert(runtime.state() == RuntimeState::kReady);
 }
 
+void TestDuplicateAndOutOfOrderSequencesAreRejected() {
+  RobotRuntime runtime(500);
+  uint8_t frame[64] = {};
+  size_t size = Build(MessageType::kHeartbeat, 10, frame, sizeof(frame));
+  assert(runtime.HandleFrame(frame, size, 100) == DispatchResult::kHeartbeatAccepted);
+
+  assert(runtime.HandleFrame(frame, size, 110) == DispatchResult::kRejectedReplay);
+  assert(runtime.state() == RuntimeState::kReady);
+  assert(runtime.last_sequence() == 10);
+
+  size = BuildValidMotion(11, frame, sizeof(frame), 1u);
+  assert(runtime.HandleFrame(frame, size, 120) == DispatchResult::kMotionDeferred);
+  assert(runtime.HandleFrame(frame, size, 130) == DispatchResult::kRejectedReplay);
+
+  size = Build(MessageType::kHeartbeat, 10, frame, sizeof(frame));
+  assert(runtime.HandleFrame(frame, size, 140) == DispatchResult::kRejectedReplay);
+  assert(runtime.last_sequence() == 11);
+}
+
+void TestDuplicateMotionCommandIdIsRejectedOnFreshSequence() {
+  RobotRuntime runtime(500);
+  uint8_t frame[64] = {};
+  size_t size = Build(MessageType::kHeartbeat, 1, frame, sizeof(frame));
+  assert(runtime.HandleFrame(frame, size, 100) == DispatchResult::kHeartbeatAccepted);
+
+  size = BuildValidMotion(2, frame, sizeof(frame), 7u);
+  assert(runtime.HandleFrame(frame, size, 110) == DispatchResult::kMotionDeferred);
+
+  size = BuildValidMotion(3, frame, sizeof(frame), 7u);
+  assert(runtime.HandleFrame(frame, size, 120) == DispatchResult::kRejectedReplay);
+  assert(runtime.state() == RuntimeState::kReady);
+
+  size = BuildValidMotion(4, frame, sizeof(frame), 8u);
+  assert(runtime.HandleFrame(frame, size, 130) == DispatchResult::kMotionDeferred);
+}
+
+void TestSequenceWrapAroundRemainsFresh() {
+  RobotRuntime runtime(500);
+  uint8_t frame[64] = {};
+  size_t size = Build(MessageType::kHeartbeat, 0xFFFFu, frame, sizeof(frame));
+  assert(runtime.HandleFrame(frame, size, 100) == DispatchResult::kHeartbeatAccepted);
+
+  size = BuildValidMotion(0u, frame, sizeof(frame), 1u);
+  assert(runtime.HandleFrame(frame, size, 110) == DispatchResult::kMotionDeferred);
+  assert(runtime.last_sequence() == 0u);
+}
+
 void TestDispatchResultsMapToExplicitAckStatus() {
   assert(AckStatusForDispatch(DispatchResult::kHeartbeatAccepted) == AckStatus::kOk);
   assert(AckStatusForDispatch(DispatchResult::kEstopLatched) == AckStatus::kOk);
   assert(AckStatusForDispatch(DispatchResult::kMotionDeferred) == AckStatus::kOk);
   assert(AckStatusForDispatch(DispatchResult::kMotionRejectedUnsafe) ==
          AckStatus::kRejected);
+  assert(AckStatusForDispatch(DispatchResult::kRejectedReplay) == AckStatus::kStale);
   assert(AckStatusForDispatch(DispatchResult::kMotionRejectedInvalidPayload) ==
          AckStatus::kInvalid);
 }
@@ -151,6 +204,9 @@ int main() {
   TestPhysicalEstopBlocksReset();
   TestInvalidFrameNeverChangesSafetyState();
   TestMalformedMotionPayloadIsInvalidNotDeferred();
+  TestDuplicateAndOutOfOrderSequencesAreRejected();
+  TestDuplicateMotionCommandIdIsRejectedOnFreshSequence();
+  TestSequenceWrapAroundRemainsFresh();
   TestDispatchResultsMapToExplicitAckStatus();
   return 0;
 }
