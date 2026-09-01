@@ -1,4 +1,4 @@
-"""Typed evidence and permit models for the single-servo HIL gate."""
+"""Typed evidence, permit, and run-result models for the single-servo HIL gate."""
 
 from __future__ import annotations
 
@@ -10,8 +10,15 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-HIL_EVIDENCE_SCHEMA_VERSION = "rci.single_servo_hil_evidence.v1"
-HIL_PERMIT_SCHEMA_VERSION = "rci.single_servo_hil_permit.v1"
+HIL_EVIDENCE_SCHEMA_VERSION: Literal["rci.single_servo_hil_evidence.v1"] = (
+    "rci.single_servo_hil_evidence.v1"
+)
+HIL_PERMIT_SCHEMA_VERSION: Literal["rci.single_servo_hil_permit.v1"] = (
+    "rci.single_servo_hil_permit.v1"
+)
+HIL_RUN_RESULT_SCHEMA_VERSION: Literal["rci.single_servo_hil_run_result.v1"] = (
+    "rci.single_servo_hil_run_result.v1"
+)
 
 
 class EvidenceKind(StrEnum):
@@ -19,6 +26,13 @@ class EvidenceKind(StrEnum):
     MEASUREMENT = "measurement"
     PHOTO = "photo"
     VIDEO = "video"
+    TELEMETRY = "telemetry"
+
+
+class HilRunOutcome(StrEnum):
+    PASS = "pass"
+    FAIL = "fail"
+    ABORTED = "aborted"
 
 
 class EvidenceReference(BaseModel):
@@ -115,6 +129,8 @@ class SingleServoHilEvidence(BaseModel):
 
     @model_validator(mode="after")
     def require_artifact_classes(self) -> SingleServoHilEvidence:
+        if self.recorded_at.tzinfo is None:
+            raise ValueError("recorded_at must be timezone-aware")
         kinds = {reference.kind for reference in self.evidence_refs}
         if EvidenceKind.WIRING not in kinds:
             raise ValueError("HIL evidence must include a wiring artifact")
@@ -142,6 +158,56 @@ class HilActivationPermit(BaseModel):
     test_lower_angle_deg: float
     test_upper_angle_deg: float
     max_test_step_deg: float = Field(gt=0)
+
+
+class HilTargetObservation(BaseModel):
+    """One physical command/observation sample from a real single-servo run."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
+
+    commanded_angle_deg: float
+    observed_angle_deg: float
+    commanded_pulse_us: int = Field(gt=0)
+    observed_current_a: float = Field(ge=0)
+
+
+class SingleServoHilRunResult(BaseModel):
+    """Post-run physical evidence; PASS has intentionally strict requirements."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
+
+    schema_version: Literal["rci.single_servo_hil_run_result.v1"] = HIL_RUN_RESULT_SCHEMA_VERSION
+    evidence_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    joint_name: str = Field(min_length=1)
+    started_at: datetime
+    completed_at: datetime
+    outcome: HilRunOutcome
+    observations: tuple[HilTargetObservation, ...] = ()
+    estop_response_verified: bool = False
+    power_cut_response_verified: bool = False
+    unexpected_motion: bool = False
+    operator_notes: str = ""
+    evidence_refs: tuple[EvidenceReference, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_result(self) -> SingleServoHilRunResult:
+        if self.started_at.tzinfo is None or self.completed_at.tzinfo is None:
+            raise ValueError("run timestamps must be timezone-aware")
+        if self.completed_at < self.started_at:
+            raise ValueError("completed_at cannot precede started_at")
+        if self.outcome is HilRunOutcome.PASS:
+            if not self.observations:
+                raise ValueError("PASS requires at least one physical observation")
+            if self.unexpected_motion:
+                raise ValueError("PASS cannot include unexpected motion")
+            if not self.estop_response_verified or not self.power_cut_response_verified:
+                raise ValueError("PASS requires verified E-stop and power-cut response")
+            kinds = {reference.kind for reference in self.evidence_refs}
+            if EvidenceKind.MEASUREMENT not in kinds:
+                raise ValueError("PASS requires a measurement artifact")
+            if not ({EvidenceKind.VIDEO, EvidenceKind.TELEMETRY} & kinds):
+                raise ValueError("PASS requires video or telemetry evidence")
+        return self
 
 
 def evidence_digest(evidence: SingleServoHilEvidence) -> str:
