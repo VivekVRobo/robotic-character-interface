@@ -1,0 +1,12 @@
+imu:
+  sensor: MPU6050
+  sample_rate_hz: 100
+  accel_range_g: 2
+  gyro_range_dps: 250
+filter:
+  type: complementary
+  alpha: 0.96
+  dead_zone_pitch_deg: 3.0
+  dead_zone_roll_deg: 3.0
+calibration:
+  hardware_verified: false

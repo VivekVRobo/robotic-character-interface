@@ -1,0 +1,15 @@
+robot:
+  hardware_verified: false
+  links:
+    shoulder_mm: null
+    forearm_mm: null
+  poses:
+    home: {}
+    safe: {}
+  workspace:
+    min_x_mm: null
+    max_x_mm: null
+    min_y_mm: null
+    max_y_mm: null
+    min_z_mm: null
+    max_z_mm: null

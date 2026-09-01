@@ -1,0 +1,5 @@
+voice:
+  enabled: true
+  stt_backend: speech_recognition
+  tts_backend: edge_tts
+  barge_in: true

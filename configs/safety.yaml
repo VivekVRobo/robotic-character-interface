@@ -1,0 +1,12 @@
+motion:
+  command_ttl_ms: 250
+  heartbeat_interval_ms: 100
+  heartbeat_timeout_ms: 500
+  max_velocity_deg_s: 60.0
+  max_acceleration_deg_s2: 180.0
+states:
+  motion_allowed:
+    - ARMED
+    - EXECUTING
+estop:
+  require_manual_reset: true

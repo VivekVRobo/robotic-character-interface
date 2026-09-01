@@ -1,0 +1,5 @@
+system:
+  environment: development
+  name: robotic-character-interface
+  simulation: true
+  startup_state: BOOT

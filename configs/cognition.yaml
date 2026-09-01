@@ -1,0 +1,4 @@
+cognition:
+  structured_output_required: true
+  allow_freeform_motion_commands: false
+  session_memory: true

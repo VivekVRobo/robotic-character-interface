@@ -1,0 +1,6 @@
+style:
+  velocity_scale: 0.65
+  acceleration_scale: 0.55
+  amplitude_scale: 0.75
+  pause_scale: 1.10
+  transition_smoothness: 0.90
