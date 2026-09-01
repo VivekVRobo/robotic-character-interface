@@ -97,12 +97,8 @@ async def test_priority_orders_events_already_waiting_in_queue() -> None:
     await bus.start()
     await bus.publish(NamedEvent(source="test", name="gate"))
     await processing_started.wait()
-    await bus.publish(
-        NamedEvent(source="test", name="low"), priority=EventPriority.LOW
-    )
-    await bus.publish(
-        NamedEvent(source="test", name="critical"), priority=EventPriority.CRITICAL
-    )
+    await bus.publish(NamedEvent(source="test", name="low"), priority=EventPriority.LOW)
+    await bus.publish(NamedEvent(source="test", name="critical"), priority=EventPriority.CRITICAL)
     gate.set()
     await bus.join()
     await bus.stop()
