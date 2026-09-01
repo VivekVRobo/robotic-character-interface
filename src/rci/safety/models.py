@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from math import isfinite
 from types import MappingProxyType
@@ -24,6 +24,16 @@ class SafetyViolationCode(StrEnum):
     JOINT_LIMIT_VIOLATION = "JOINT_LIMIT_VIOLATION"
     WORKSPACE_TARGET_REQUIRED = "WORKSPACE_TARGET_REQUIRED"
     WORKSPACE_LIMIT_VIOLATION = "WORKSPACE_LIMIT_VIOLATION"
+    MOTION_POLICY_UNAVAILABLE = "MOTION_POLICY_UNAVAILABLE"
+    COMMAND_AGE_INVALID = "COMMAND_AGE_INVALID"
+    COMMAND_STALE = "COMMAND_STALE"
+    HEARTBEAT_AGE_INVALID = "HEARTBEAT_AGE_INVALID"
+    HEARTBEAT_STALE = "HEARTBEAT_STALE"
+    VELOCITY_SAMPLE_MISSING = "VELOCITY_SAMPLE_MISSING"
+    ACCELERATION_SAMPLE_MISSING = "ACCELERATION_SAMPLE_MISSING"
+    DYNAMIC_SAMPLE_UNKNOWN_JOINT = "DYNAMIC_SAMPLE_UNKNOWN_JOINT"
+    VELOCITY_LIMIT_VIOLATION = "VELOCITY_LIMIT_VIOLATION"
+    ACCELERATION_LIMIT_VIOLATION = "ACCELERATION_LIMIT_VIOLATION"
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,6 +134,26 @@ class WorkspaceBounds:
 
 
 @dataclass(frozen=True, slots=True)
+class MotionSafetyPolicy:
+    """Configured dynamic limits and freshness thresholds."""
+
+    command_ttl_ms: float
+    heartbeat_timeout_ms: float
+    max_velocity_deg_s: float
+    max_acceleration_deg_s2: float
+
+    @property
+    def valid(self) -> bool:
+        values = (
+            self.command_ttl_ms,
+            self.heartbeat_timeout_ms,
+            self.max_velocity_deg_s,
+            self.max_acceleration_deg_s2,
+        )
+        return all(isfinite(value) and value > 0 for value in values)
+
+
+@dataclass(frozen=True, slots=True)
 class SafetyEnvelope:
     """Configuration-derived physical safety envelope."""
 
@@ -132,6 +162,7 @@ class SafetyEnvelope:
     allowed_states: frozenset[SystemState]
     robot_verified: bool
     servos_verified: bool
+    motion_policy: MotionSafetyPolicy | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "joints", MappingProxyType(dict(self.joints)))
@@ -161,6 +192,28 @@ class MotionCandidate:
             self,
             "joint_targets_deg",
             MappingProxyType(dict(self.joint_targets_deg)),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class MotionDynamics:
+    """Freshness and per-joint dynamic samples for one candidate command."""
+
+    command_age_ms: float
+    heartbeat_age_ms: float
+    joint_velocities_deg_s: Mapping[str, float] = field(default_factory=dict)
+    joint_accelerations_deg_s2: Mapping[str, float] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "joint_velocities_deg_s",
+            MappingProxyType(dict(self.joint_velocities_deg_s)),
+        )
+        object.__setattr__(
+            self,
+            "joint_accelerations_deg_s2",
+            MappingProxyType(dict(self.joint_accelerations_deg_s2)),
         )
 
 

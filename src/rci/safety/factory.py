@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 from rci.config.models import AppSettings
-from rci.safety.models import JointConstraint, SafetyEnvelope, WorkspaceBounds
+from rci.safety.models import (
+    JointConstraint,
+    MotionSafetyPolicy,
+    SafetyEnvelope,
+    WorkspaceBounds,
+)
 
 
 def build_safety_envelope(settings: AppSettings) -> SafetyEnvelope:
@@ -46,10 +51,19 @@ def build_safety_envelope(settings: AppSettings) -> SafetyEnvelope:
         verified=settings.robot.hardware_verified and workspace_complete,
     )
 
+    motion = settings.safety.motion
+    motion_policy = MotionSafetyPolicy(
+        command_ttl_ms=float(motion.command_ttl_ms),
+        heartbeat_timeout_ms=float(motion.heartbeat_timeout_ms),
+        max_velocity_deg_s=motion.max_velocity_deg_s,
+        max_acceleration_deg_s2=motion.max_acceleration_deg_s2,
+    )
+
     return SafetyEnvelope(
         joints=joints,
         workspace=workspace,
         allowed_states=frozenset(settings.safety.states.motion_allowed),
         robot_verified=settings.robot.hardware_verified,
         servos_verified=settings.servos.hardware_verified,
+        motion_policy=motion_policy,
     )
