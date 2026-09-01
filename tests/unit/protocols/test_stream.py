@@ -47,7 +47,7 @@ def test_stream_decoder_reports_bad_crc_then_recovers_next_frame() -> None:
     batch = FrameStreamDecoder().feed(bytes(bad) + expected.encode())
 
     assert batch.frames == (expected,)
-    assert any(issue.kind == StreamIssueKind.INVALID_FRAME for issue in batch.issues)
+    assert any(issue.kind == StreamIssueKind.CHECKSUM_MISMATCH for issue in batch.issues)
 
 
 def test_stream_decoder_rejects_oversized_header_without_waiting_for_payload() -> None:

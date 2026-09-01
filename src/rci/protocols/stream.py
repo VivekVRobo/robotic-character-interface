@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from struct import Struct
 
-from rci.domain.errors import ProtocolError
+from rci.domain.errors import ProtocolChecksumError, ProtocolError
 from rci.protocols.constants import (
     CRC_SIZE,
     FRAME_OVERHEAD,
@@ -24,6 +24,7 @@ _HEADER = Struct("<2sBBHH")
 class StreamIssueKind(StrEnum):
     DESYNC = "DESYNC"
     INVALID_HEADER = "INVALID_HEADER"
+    CHECKSUM_MISMATCH = "CHECKSUM_MISMATCH"
     INVALID_FRAME = "INVALID_FRAME"
     BUFFER_OVERFLOW = "BUFFER_OVERFLOW"
 
@@ -136,6 +137,16 @@ class FrameStreamDecoder:
             candidate = bytes(self._buffer[:frame_size])
             try:
                 frame = Frame.decode(candidate)
+            except ProtocolChecksumError as exc:
+                del self._buffer[0]
+                issues.append(
+                    StreamIssue(
+                        StreamIssueKind.CHECKSUM_MISMATCH,
+                        str(exc),
+                        1,
+                    )
+                )
+                continue
             except ProtocolError as exc:
                 del self._buffer[0]
                 issues.append(
