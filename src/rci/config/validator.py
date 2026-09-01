@@ -31,6 +31,19 @@ def _validate_verified_joint(name: str, joint: ServoJointSettings) -> None:
         raise ConfigurationError(f"servo joint {name!r} must satisfy min < neutral < max")
 
 
+def _validate_protocol_joint_ids(settings: AppSettings) -> None:
+    seen: dict[int, str] = {}
+    for name, joint in settings.servos.joints.items():
+        if joint.protocol_id is None:
+            raise ConfigurationError(f"servo joint {name!r} requires protocol_id")
+        previous = seen.get(joint.protocol_id)
+        if previous is not None:
+            raise ConfigurationError(
+                f"servo joints {previous!r} and {name!r} share protocol_id {joint.protocol_id}"
+            )
+        seen[joint.protocol_id] = name
+
+
 def validate_app_settings(settings: AppSettings) -> None:
     """Validate invariants that span individual Pydantic models/files."""
     if settings.system.startup_state is not SystemState.BOOT:
@@ -51,6 +64,8 @@ def validate_app_settings(settings: AppSettings) -> None:
     if illegal:
         names = ", ".join(sorted(state.value for state in illegal))
         raise ConfigurationError(f"motion cannot be enabled in states: {names}")
+
+    _validate_protocol_joint_ids(settings)
 
     if settings.servos.hardware_verified:
         if not settings.servos.joints:
