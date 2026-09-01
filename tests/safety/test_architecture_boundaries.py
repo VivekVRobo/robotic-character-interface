@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 FORBIDDEN_ACTUATOR_TOKENS = (
     "PCA9685",
     "ServoKit",
@@ -23,7 +22,8 @@ def test_non_hardware_python_modules_do_not_reference_actuator_libraries() -> No
             if token in text:
                 violations.append(f"{relative}: {token}")
 
-    assert not violations, "Direct actuator references outside hardware boundary: " + ", ".join(violations)
+    message = "Direct actuator references outside hardware boundary: " + ", ".join(violations)
+    assert not violations, message
 
 
 def test_glove_firmware_does_not_define_servo_angle_control_packet() -> None:
