@@ -42,6 +42,9 @@ def validate_app_settings(settings: AppSettings) -> None:
     if motion.command_ttl_ms > motion.heartbeat_timeout_ms:
         raise ConfigurationError("command TTL must not exceed heartbeat timeout")
 
+    if not settings.safety.estop.require_manual_reset:
+        raise ConfigurationError("V1 safety requires explicit manual emergency-stop reset")
+
     allowed_motion_states = set(settings.safety.states.motion_allowed)
     permitted = {SystemState.ARMED, SystemState.EXECUTING}
     illegal = allowed_motion_states - permitted

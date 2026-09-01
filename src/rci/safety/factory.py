@@ -1,8 +1,9 @@
-"""Build deterministic safety envelopes from validated application settings."""
+"""Build deterministic safety models from validated application settings."""
 
 from __future__ import annotations
 
 from rci.config.models import AppSettings
+from rci.safety.lifecycle import SafetyLifecyclePolicy
 from rci.safety.models import (
     JointConstraint,
     MotionSafetyPolicy,
@@ -66,4 +67,12 @@ def build_safety_envelope(settings: AppSettings) -> SafetyEnvelope:
         robot_verified=settings.robot.hardware_verified,
         servos_verified=settings.servos.hardware_verified,
         motion_policy=motion_policy,
+    )
+
+
+def build_safety_lifecycle_policy(settings: AppSettings) -> SafetyLifecyclePolicy:
+    """Derive watchdog/reset lifecycle policy from validated safety settings."""
+    return SafetyLifecyclePolicy(
+        heartbeat_timeout_ms=float(settings.safety.motion.heartbeat_timeout_ms),
+        require_manual_reset=settings.safety.estop.require_manual_reset,
     )
