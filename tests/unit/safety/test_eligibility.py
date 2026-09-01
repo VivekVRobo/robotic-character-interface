@@ -142,6 +142,4 @@ def test_estop_has_priority_over_other_eligibility_checks() -> None:
     )
 
     assert result.decision is MotionDecision.ESTOP
-    assert [violation.code for violation in result.violations] == [
-        SafetyViolationCode.ESTOP_ACTIVE
-    ]
+    assert [violation.code for violation in result.violations] == [SafetyViolationCode.ESTOP_ACTIVE]
