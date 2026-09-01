@@ -1,0 +1,17 @@
+{
+  "crc16_ccitt_false": {
+    "input_hex": "313233343536373839",
+    "expected_crc_hex": "29b1"
+  },
+  "glove_telemetry": {
+    "sequence": 4660,
+    "payload_hex": "5634e80306ff2a00e204b6fe0000d204c9fd870f05",
+    "frame_prefix_hex": "52430101341215005634e80306ff2a00e204b6fe0000d204c9fd870f05",
+    "frame_size": 31
+  },
+  "heartbeat": {
+    "sequence": 7,
+    "payload_hex": "0440e2010004",
+    "frame_prefix_hex": "52430102070006000440e2010004"
+  }
+}

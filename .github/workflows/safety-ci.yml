@@ -13,3 +13,8 @@ jobs:
           python-version: '3.12'
       - run: pip install -e '.[dev]'
       - run: pytest tests/contract tests/safety
+      - name: Cross-language protocol golden vectors
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror -pedantic \
+            tests/contract/protocol_cpp_golden.cpp -o /tmp/rci_protocol_golden
+          /tmp/rci_protocol_golden

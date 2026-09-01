@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rci.character_response.v1",
+  "title": "RCI CharacterResponse v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "interaction_id",
+    "decision_id",
+    "source_character",
+    "speech",
+    "expression",
+    "motion",
+    "verified",
+    "persistence_committed",
+    "persistence_durable"
+  ],
+  "properties": {
+    "schema_version": {"const": "rci.character_response.v1"},
+    "interaction_id": {"type": "string", "minLength": 1},
+    "decision_id": {"type": "string", "minLength": 1},
+    "source_character": {"const": "aurelia"},
+    "speech": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "delivery", "interruptible"],
+      "properties": {
+        "text": {"type": "string", "minLength": 1},
+        "delivery": {
+          "enum": ["neutral", "supportive", "confident", "cautious", "encouraging", "empathetic"]
+        },
+        "interruptible": {"type": "boolean"}
+      }
+    },
+    "expression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expression", "strength"],
+      "properties": {
+        "expression": {"type": "string", "minLength": 1},
+        "strength": {"enum": ["none", "subtle", "moderate", "strong"]}
+      }
+    },
+    "motion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cue", "style", "disposition"],
+      "properties": {
+        "cue": {
+          "enum": ["none", "listen", "acknowledge", "present", "caution", "celebrate", "think"]
+        },
+        "style": {"enum": ["restrained", "standard", "expressive"]},
+        "disposition": {"enum": ["none", "optional"]}
+      }
+    },
+    "verified": {"const": true},
+    "persistence_committed": {"const": true},
+    "persistence_durable": {"type": "boolean"}
+  }
+}
