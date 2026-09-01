@@ -3,7 +3,7 @@ servos:
   driver: PCA9685
   pwm_frequency_hz: 50
   joints:
-    base: {channel: 0, min_deg: null, max_deg: null, neutral_deg: null}
-    shoulder: {channel: 1, min_deg: null, max_deg: null, neutral_deg: null}
-    elbow: {channel: 2, min_deg: null, max_deg: null, neutral_deg: null}
-    gripper: {channel: 3, min_deg: null, max_deg: null, neutral_deg: null}
+    base: {channel: 0, protocol_id: 1, min_deg: null, max_deg: null, neutral_deg: null}
+    shoulder: {channel: 1, protocol_id: 2, min_deg: null, max_deg: null, neutral_deg: null}
+    elbow: {channel: 2, protocol_id: 3, min_deg: null, max_deg: null, neutral_deg: null}
+    gripper: {channel: 3, protocol_id: 4, min_deg: null, max_deg: null, neutral_deg: null}
