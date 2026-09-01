@@ -138,12 +138,12 @@ class FrameStreamDecoder:
             try:
                 frame = Frame.decode(candidate)
             except ProtocolChecksumError as exc:
-                del self._buffer[0]
+                del self._buffer[:frame_size]
                 issues.append(
                     StreamIssue(
                         StreamIssueKind.CHECKSUM_MISMATCH,
                         str(exc),
-                        1,
+                        frame_size,
                     )
                 )
                 continue
