@@ -24,6 +24,8 @@ _ACK = Struct("<HB")
 _MOTION_HEAD = Struct("<HBB")
 _JOINT_TARGET = Struct("<Bh")
 _MOTION_TAIL = Struct("<HH")
+_ROBOT_TELEMETRY_HEAD = Struct("<IBBHB")
+_ROBOT_JOINT_TELEMETRY = Struct("<BhhH")
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,6 +101,88 @@ class Heartbeat:
             return cls(DeviceSource(raw_source), uptime_ms, WireSystemState(raw_state))
         except ValueError as exc:
             raise ProtocolError("heartbeat contains an unknown enum value") from exc
+
+
+@dataclass(frozen=True, slots=True)
+class RobotJointTelemetry:
+    joint_id: int
+    position_cdeg: int
+    velocity_cdeg_s: int
+    current_ma: int
+
+
+@dataclass(frozen=True, slots=True)
+class RobotTelemetry:
+    """Robot-side state report. Values may be simulated or measured by the producing device."""
+
+    uptime_ms: int
+    state: WireSystemState
+    flags: int
+    supply_mv: int
+    joints: tuple[RobotJointTelemetry, ...]
+
+    def encode(self) -> bytes:
+        _require_uint("uptime_ms", self.uptime_ms, 32)
+        _require_uint("flags", self.flags, 8)
+        _require_uint("supply_mv", self.supply_mv, 16)
+        if not 1 <= len(self.joints) <= MAX_JOINT_TARGETS:
+            raise ProtocolError("robot telemetry has invalid joint count")
+        joint_ids = [joint.joint_id for joint in self.joints]
+        if len(joint_ids) != len(set(joint_ids)):
+            raise ProtocolError("robot telemetry contains duplicate joint ids")
+
+        payload = bytearray(
+            _ROBOT_TELEMETRY_HEAD.pack(
+                self.uptime_ms,
+                int(self.state),
+                self.flags,
+                self.supply_mv,
+                len(self.joints),
+            )
+        )
+        for joint in self.joints:
+            _require_uint("joint_id", joint.joint_id, 8, minimum=1)
+            _require_int16("position_cdeg", joint.position_cdeg)
+            _require_int16("velocity_cdeg_s", joint.velocity_cdeg_s)
+            _require_uint("current_ma", joint.current_ma, 16)
+            payload.extend(
+                _ROBOT_JOINT_TELEMETRY.pack(
+                    joint.joint_id,
+                    joint.position_cdeg,
+                    joint.velocity_cdeg_s,
+                    joint.current_ma,
+                )
+            )
+        return bytes(payload)
+
+    @classmethod
+    def decode(cls, payload: bytes) -> RobotTelemetry:
+        if len(payload) < _ROBOT_TELEMETRY_HEAD.size + _ROBOT_JOINT_TELEMETRY.size:
+            raise ProtocolError("robot telemetry payload is truncated")
+        uptime_ms, raw_state, flags, supply_mv, joint_count = _ROBOT_TELEMETRY_HEAD.unpack_from(
+            payload, 0
+        )
+        if not 1 <= joint_count <= MAX_JOINT_TARGETS:
+            raise ProtocolError("robot telemetry has invalid joint count")
+        expected = _ROBOT_TELEMETRY_HEAD.size + joint_count * _ROBOT_JOINT_TELEMETRY.size
+        if len(payload) != expected:
+            raise ProtocolError("robot telemetry payload length mismatch")
+        try:
+            state = WireSystemState(raw_state)
+        except ValueError as exc:
+            raise ProtocolError("robot telemetry contains an unknown state") from exc
+
+        joints: list[RobotJointTelemetry] = []
+        offset = _ROBOT_TELEMETRY_HEAD.size
+        for _ in range(joint_count):
+            joint_id, position, velocity, current = _ROBOT_JOINT_TELEMETRY.unpack_from(
+                payload, offset
+            )
+            joints.append(RobotJointTelemetry(joint_id, position, velocity, current))
+            offset += _ROBOT_JOINT_TELEMETRY.size
+        decoded = cls(uptime_ms, state, flags, supply_mv, tuple(joints))
+        decoded.encode()
+        return decoded
 
 
 @dataclass(frozen=True, slots=True)
