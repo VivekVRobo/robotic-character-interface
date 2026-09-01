@@ -38,7 +38,11 @@ class JointConstraint:
 
     @property
     def complete(self) -> bool:
-        return self.min_deg is not None and self.max_deg is not None and self.neutral_deg is not None
+        return (
+            self.min_deg is not None
+            and self.max_deg is not None
+            and self.neutral_deg is not None
+        )
 
     @property
     def verified_complete(self) -> bool:
@@ -155,7 +159,11 @@ class MotionCandidate:
     workspace_point_mm: CartesianPoint | None
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "joint_targets_deg", MappingProxyType(dict(self.joint_targets_deg)))
+        object.__setattr__(
+            self,
+            "joint_targets_deg",
+            MappingProxyType(dict(self.joint_targets_deg)),
+        )
 
 
 @dataclass(frozen=True, slots=True)
