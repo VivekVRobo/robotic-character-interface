@@ -20,7 +20,6 @@ from rci.hil.models import (
     evidence_digest,
 )
 
-
 _HASH_A = "a" * 64
 _HASH_B = "b" * 64
 _HASH_C = "c" * 64
