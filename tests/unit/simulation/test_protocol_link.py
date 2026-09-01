@@ -1,5 +1,6 @@
 import pytest
 
+from rci.domain.errors import ProtocolError
 from rci.protocols.constants import MessageType
 from rci.protocols.framing import Frame
 from rci.simulation.protocol_link import SimulatedProtocolLink
@@ -28,7 +29,7 @@ async def test_raw_injection_preserves_following_valid_frame_for_recovery() -> N
     corrupted[-1] ^= 0x80
     await link.inject_to_host(bytes(corrupted) + expected.encode())
 
-    with pytest.raises(Exception):
+    with pytest.raises(ProtocolError, match="stream bad_crc"):
         await link.host.receive_frame(timeout_s=0.1)
     assert await link.host.receive_frame(timeout_s=0.1) == expected
     await link.close()
