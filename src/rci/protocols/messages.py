@@ -154,7 +154,12 @@ class ValidatedMotionCommand:
         ttl_ms, raw_mode, joint_count = _MOTION_HEAD.unpack_from(payload, 16)
         if not 1 <= joint_count <= MAX_JOINT_TARGETS:
             raise ProtocolError("motion command has invalid joint target count")
-        expected_size = 16 + _MOTION_HEAD.size + joint_count * _JOINT_TARGET.size + _MOTION_TAIL.size
+        expected_size = (
+            16
+            + _MOTION_HEAD.size
+            + joint_count * _JOINT_TARGET.size
+            + _MOTION_TAIL.size
+        )
         if len(payload) != expected_size:
             raise ProtocolError("motion command payload length mismatch")
 

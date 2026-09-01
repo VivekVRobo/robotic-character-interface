@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import Literal, Mapping, Self
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
