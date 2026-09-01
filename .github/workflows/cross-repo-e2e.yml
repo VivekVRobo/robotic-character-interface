@@ -17,7 +17,7 @@ jobs:
       - name: Checkout Aurelia main
         uses: actions/checkout@v4
         with:
-          repository: vasu4990/Aurelia-Chan-Source
+          repository: VivekVRobo/Aurelia-Chan-Source
           ref: main
           path: aurelia
 
@@ -45,8 +45,8 @@ jobs:
           echo "RCI=$(git -C rci rev-parse HEAD)"
           echo "AURELIA=$(git -C aurelia rev-parse HEAD)"
 
-      - name: Real Aurelia to compiled robot runtime E2E
+      - name: Real Aurelia to compiled robot runtime E2E and fault campaign
         working-directory: rci
         env:
           RCI_ROBOT_RUNTIME_BRIDGE: /tmp/rci-robot-runtime-bridge
-        run: pytest -q tests/integration/test_cross_repo_e2e.py
+        run: pytest -q tests/integration
