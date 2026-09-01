@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from enum import StrEnum
 from math import isfinite
 
@@ -95,11 +95,35 @@ class SafetyLifecycleController:
     def snapshot(self) -> SafetyLifecycleSnapshot:
         return self._snapshot
 
-    def _commit(self, **changes: object) -> SafetyLifecycleSnapshot:
-        updated = replace(
-            self._snapshot,
-            sequence=self._snapshot.sequence + 1,
-            **changes,
+    def _commit(
+        self,
+        *,
+        watchdog_armed: bool | None = None,
+        watchdog_healthy: bool | None = None,
+        physical_estop_active: bool | None = None,
+        estop_latched: bool | None = None,
+        causes: frozenset[SafetyStopCause] | None = None,
+        latest_reason: str | None = None,
+    ) -> SafetyLifecycleSnapshot:
+        current = self._snapshot
+        updated = SafetyLifecycleSnapshot(
+            sequence=current.sequence + 1,
+            watchdog_armed=(
+                current.watchdog_armed if watchdog_armed is None else watchdog_armed
+            ),
+            watchdog_healthy=(
+                current.watchdog_healthy if watchdog_healthy is None else watchdog_healthy
+            ),
+            physical_estop_active=(
+                current.physical_estop_active
+                if physical_estop_active is None
+                else physical_estop_active
+            ),
+            estop_latched=(
+                current.estop_latched if estop_latched is None else estop_latched
+            ),
+            causes=current.causes if causes is None else causes,
+            latest_reason=current.latest_reason if latest_reason is None else latest_reason,
         )
         self._snapshot = updated
         return updated
@@ -108,14 +132,17 @@ class SafetyLifecycleController:
         self,
         cause: SafetyStopCause,
         reason: str,
-        **changes: object,
+        *,
+        watchdog_healthy: bool | None = None,
+        physical_estop_active: bool | None = None,
     ) -> SafetyLifecycleSnapshot:
         causes = frozenset((*self._snapshot.causes, cause))
         return self._commit(
             estop_latched=True,
             causes=causes,
             latest_reason=reason,
-            **changes,
+            watchdog_healthy=watchdog_healthy,
+            physical_estop_active=physical_estop_active,
         )
 
     def arm_watchdog(self) -> SafetyLifecycleSnapshot:
