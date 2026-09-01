@@ -45,9 +45,7 @@ class DigitalTwinRobot:
         self._command_acceleration_limit = min(
             joint.max_acceleration_deg_s2 for joint in model.profile.joints.values()
         )
-        self._id_to_name = {
-            joint.protocol_id: name for name, joint in model.profile.joints.items()
-        }
+        self._id_to_name = {joint.protocol_id: name for name, joint in model.profile.joints.items()}
 
     @property
     def state(self) -> DigitalTwinState:
