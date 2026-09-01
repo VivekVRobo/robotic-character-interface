@@ -1,0 +1,45 @@
+reference_robot:
+  schema_version: rci.reference_robot.v1
+  profile_id: generic-4dof-reference-arm-v1
+  simulation_only: true
+  hardware_verified: false
+  provenance:
+    source: engineering_prediction
+    confidence: medium
+    note: >-
+      Conservative reference values for software simulation and digital-twin testing only.
+      They are not measurements, manufacturer guarantees, or physical hardware evidence.
+  geometry:
+    base_height_mm: 80.0
+    shoulder_link_mm: 120.0
+    forearm_link_mm: 120.0
+    tool_length_mm: 55.0
+  joints:
+    base:
+      protocol_id: 1
+      lower_deg: -135.0
+      upper_deg: 135.0
+      home_deg: 0.0
+      max_velocity_deg_s: 45.0
+      max_acceleration_deg_s2: 120.0
+    shoulder:
+      protocol_id: 2
+      lower_deg: -60.0
+      upper_deg: 120.0
+      home_deg: 30.0
+      max_velocity_deg_s: 40.0
+      max_acceleration_deg_s2: 100.0
+    elbow:
+      protocol_id: 3
+      lower_deg: -135.0
+      upper_deg: 135.0
+      home_deg: 60.0
+      max_velocity_deg_s: 45.0
+      max_acceleration_deg_s2: 120.0
+    gripper:
+      protocol_id: 4
+      lower_deg: 0.0
+      upper_deg: 70.0
+      home_deg: 20.0
+      max_velocity_deg_s: 35.0
+      max_acceleration_deg_s2: 90.0
