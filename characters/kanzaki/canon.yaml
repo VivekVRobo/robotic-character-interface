@@ -1,0 +1,4 @@
+id: kanzaki
+status: scaffold
+required_traits: [elegant, controlled, sophisticated]
+forbidden_traits: [chaotic, non_consent]

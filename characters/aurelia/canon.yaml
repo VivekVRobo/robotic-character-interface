@@ -1,0 +1,4 @@
+id: aurelia
+status: scaffold
+required_traits: [mature, calm, professional, strategic]
+forbidden_traits: [impulsive, childish]

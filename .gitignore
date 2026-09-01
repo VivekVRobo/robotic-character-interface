@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+.env
+*.log
+node_modules/
+dashboard/dist/
+.DS_Store
+.idea/
+.vscode/
+*.wav
+*.mp3
+# datasets and benchmark outputs are opt-in; keep fixtures/metadata only by default
+datasets/raw/*
+datasets/processed/*
+datasets/sessions/*
+!datasets/raw/.gitkeep
+!datasets/processed/.gitkeep
+!datasets/sessions/.gitkeep
+benchmarks/**/runs/*

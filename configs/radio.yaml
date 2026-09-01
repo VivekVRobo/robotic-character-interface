@@ -1,0 +1,7 @@
+radio:
+  module: nRF24L01+
+  channel: 100
+  data_rate: 250KBPS
+  glove_to_gateway_pipe: "0xF0F0F0F0E1"
+  gateway_to_glove_pipe: "0xF0F0F0F0D2"
+  packet_sequence_required: true

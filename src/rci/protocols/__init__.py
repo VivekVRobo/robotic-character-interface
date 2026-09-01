@@ -1,0 +1,1 @@
+"""Host/firmware communication contracts."""
