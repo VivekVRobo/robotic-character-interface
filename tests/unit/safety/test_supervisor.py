@@ -133,9 +133,7 @@ def test_dynamic_safety_failure_never_mints_authorization() -> None:
 
     assert result.decision is MotionDecision.REJECT
     assert result.authorization is None
-    assert SafetyViolationCode.COMMAND_STALE in {
-        violation.code for violation in result.violations
-    }
+    assert SafetyViolationCode.COMMAND_STALE in {violation.code for violation in result.violations}
 
 
 def test_watchdog_timeout_is_escalated_to_estop() -> None:
