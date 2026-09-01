@@ -246,7 +246,11 @@ class RobotGateway:
                 )
 
             self._last_acknowledged_sequence = sequence
-            if response.message_type is MessageType.NACK or acknowledgement.status is not AckStatus.OK:
+            rejected = (
+                response.message_type is MessageType.NACK
+                or acknowledgement.status is not AckStatus.OK
+            )
+            if rejected:
                 self._rejected_count += 1
                 raise RobotGatewayRejected(
                     f"robot rejected sequence {sequence}: {acknowledgement.status.name}"
