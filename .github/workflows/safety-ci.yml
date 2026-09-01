@@ -18,3 +18,8 @@ jobs:
           g++ -std=c++17 -Wall -Wextra -Werror -pedantic \
             tests/contract/protocol_cpp_golden.cpp -o /tmp/rci_protocol_golden
           /tmp/rci_protocol_golden
+      - name: Robot firmware safety runtime
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror -pedantic \
+            tests/contract/robot_firmware_runtime.cpp -o /tmp/rci_robot_runtime
+          /tmp/rci_robot_runtime
