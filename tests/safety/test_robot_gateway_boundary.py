@@ -31,6 +31,6 @@ def test_gateway_is_only_application_module_emitting_validated_motion_type() -> 
         if "MessageType.VALIDATED_MOTION_COMMAND" in source:
             offenders.append(str(path))
 
-    assert offenders == [], (
-        "validated motion wire type emitted outside RobotGateway: " + ", ".join(offenders)
+    assert offenders == [], "validated motion wire type emitted outside RobotGateway: " + ", ".join(
+        offenders
     )
