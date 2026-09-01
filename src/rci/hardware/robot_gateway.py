@@ -167,9 +167,7 @@ class RobotGateway:
         for name, angle_deg in authorization.joint_targets_deg.items():
             protocol_id = self._joint_protocol_ids.get(name)
             if protocol_id is None:
-                raise RobotGatewayProtocolError(
-                    f"authorization references unmapped joint {name!r}"
-                )
+                raise RobotGatewayProtocolError(f"authorization references unmapped joint {name!r}")
             target_cdeg = _exact_protocol_integer(
                 f"joint {name!r} target",
                 angle_deg,
@@ -293,7 +291,5 @@ def _exact_protocol_integer(
         )
     result = int(integral)
     if not minimum <= result <= maximum:
-        raise RobotGatewayProtocolError(
-            f"{name} encoded value must be in [{minimum}, {maximum}]"
-        )
+        raise RobotGatewayProtocolError(f"{name} encoded value must be in [{minimum}, {maximum}]")
     return result
