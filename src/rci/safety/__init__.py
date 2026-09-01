@@ -23,14 +23,22 @@ from rci.safety.models import (
     SafetyViolationCode,
     WorkspaceBounds,
 )
+from rci.safety.supervisor import (
+    MotionAuthorization,
+    MotionSafetyResult,
+    MotionSafetySupervisor,
+)
 
 __all__ = [
     "CartesianPoint",
     "JointConstraint",
+    "MotionAuthorization",
     "MotionCandidate",
     "MotionDynamics",
     "MotionEligibility",
     "MotionSafetyPolicy",
+    "MotionSafetyResult",
+    "MotionSafetySupervisor",
     "SafetyEnvelope",
     "SafetyLifecycleController",
     "SafetyLifecyclePolicy",
