@@ -1,0 +1,52 @@
+name: Cross-Repo Software E2E
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  aurelia-rci-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout RCI
+        uses: actions/checkout@v4
+        with:
+          path: rci
+
+      - name: Checkout Aurelia main
+        uses: actions/checkout@v4
+        with:
+          repository: vasu4990/Aurelia-Chan-Source
+          ref: main
+          path: aurelia
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install RCI and Aurelia
+        working-directory: rci
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+          python -m pip install -e ../aurelia
+
+      - name: Compile robot runtime bridge
+        working-directory: rci
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror -pedantic \
+            tests/integration/robot_runtime_bridge.cpp \
+            -o /tmp/rci-robot-runtime-bridge
+
+      - name: Record integration revisions
+        run: |
+          echo "RCI=$(git -C rci rev-parse HEAD)"
+          echo "AURELIA=$(git -C aurelia rev-parse HEAD)"
+
+      - name: Real Aurelia to compiled robot runtime E2E
+        working-directory: rci
+        env:
+          RCI_ROBOT_RUNTIME_BRIDGE: /tmp/rci-robot-runtime-bridge
+        run: pytest -q tests/integration/test_cross_repo_e2e.py
