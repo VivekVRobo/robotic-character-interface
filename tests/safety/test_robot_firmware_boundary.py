@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 ROBOT_FIRMWARE_FILES = (
     Path("firmware/robot/robot.ino"),
     Path("firmware/robot/runtime.h"),
