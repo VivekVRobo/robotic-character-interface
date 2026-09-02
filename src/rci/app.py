@@ -11,14 +11,14 @@ from fastapi import FastAPI
 from rci.api import create_api_app
 from rci.characters.client import AureliaCharacterClient
 from rci.robotics.model import RobotModel
-from rci.robotics.profile import load_reference_profile
+from rci.robotics.profile import default_reference_profile_path, load_reference_profile
 from rci.simulation.runtime import SimulationRuntime
 
 
 def build_app() -> FastAPI:
     """Build the simulation service without promoting predicted values to hardware evidence."""
     profile_path = Path(
-        os.environ.get("RCI_REFERENCE_PROFILE", "configs/simulation/reference_arm.yaml")
+        os.environ.get("RCI_REFERENCE_PROFILE", str(default_reference_profile_path()))
     ).expanduser()
     model = RobotModel(load_reference_profile(profile_path))
     runtime = SimulationRuntime(model)
