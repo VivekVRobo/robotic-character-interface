@@ -15,6 +15,11 @@ class ReferenceProfileError(ValueError):
     """Raised when a simulation reference profile is missing or invalid."""
 
 
+def default_reference_profile_path() -> Path:
+    """Return the repository-local engineering reference profile path."""
+    return Path("configs/simulation/reference_arm.yaml")
+
+
 def load_reference_profile(path: Path) -> ReferenceRobotProfile:
     try:
         raw: Any = yaml.safe_load(path.read_text(encoding="utf-8"))
