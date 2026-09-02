@@ -32,7 +32,12 @@ class MotionGestureClassifier:
         self.hold_rate_deg_s = hold_rate_deg_s
         self._roll_history: deque[float] = deque(maxlen=wave_window)
 
-    def classify(self, telemetry: GloveTelemetry, *, simulation: bool = False) -> GestureObservation:
+    def classify(
+        self,
+        telemetry: GloveTelemetry,
+        *,
+        simulation: bool = False,
+    ) -> GestureObservation:
         pitch = telemetry.pitch_cdeg / 100.0
         roll = telemetry.roll_cdeg / 100.0
         gx = telemetry.gyro_x_cdeg_s / 100.0
