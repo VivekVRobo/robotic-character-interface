@@ -140,7 +140,9 @@ class SimulationRuntime:
                 self.twin.step(self.step_s)
                 steps += 1
             if self.twin.state.state is not WireSystemState.IDLE:
-                raise SimulationRuntimeError("digital twin failed to settle within simulation budget")
+                raise SimulationRuntimeError(
+                    "digital twin failed to settle within simulation budget"
+                )
 
             return SimulationExecutionReport(
                 cue=intent.cue.value,
