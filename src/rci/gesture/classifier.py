@@ -88,7 +88,8 @@ class MotionGestureClassifier:
         )
 
     def _is_wave(self) -> bool:
-        if len(self._roll_history) < self._roll_history.maxlen:
+        maxlen = self._roll_history.maxlen
+        if maxlen is None or len(self._roll_history) < maxlen:
             return False
         threshold = self.tilt_threshold_deg * 0.65
         signs: list[int] = []
