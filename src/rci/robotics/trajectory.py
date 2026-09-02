@@ -17,16 +17,28 @@ class TrajectoryGenerator:
         self.model = model
 
     def minimum_duration(self, start_deg: dict[str, float], target_deg: dict[str, float]) -> float:
+        """Return a duration safe under the scalar v1 dynamic policy.
+
+        MotionSafetyPolicy currently exposes one global velocity and acceleration
+        limit, so trajectories use the strictest predicted joint limits for every
+        joint. This is intentionally conservative and keeps planning aligned with
+        the safety supervisor instead of weakening the supervisor for simulation.
+        """
         self.model.validate_joint_positions(start_deg)
         self.model.validate_joint_positions(target_deg)
+        global_velocity_limit = min(
+            joint.max_velocity_deg_s for joint in self.model.profile.joints.values()
+        )
+        global_acceleration_limit = min(
+            joint.max_acceleration_deg_s2 for joint in self.model.profile.joints.values()
+        )
         duration = 0.0
         for name, start in start_deg.items():
             delta = abs(target_deg[name] - start)
             if delta == 0:
                 continue
-            spec = self.model.profile.joints[name]
-            velocity_bound = 1.5 * delta / spec.max_velocity_deg_s
-            acceleration_bound = sqrt(6.0 * delta / spec.max_acceleration_deg_s2)
+            velocity_bound = 1.5 * delta / global_velocity_limit
+            acceleration_bound = sqrt(6.0 * delta / global_acceleration_limit)
             duration = max(duration, velocity_bound, acceleration_bound)
         return max(duration, 0.05)
 
