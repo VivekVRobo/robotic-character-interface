@@ -25,7 +25,14 @@ def build_app() -> FastAPI:
     aurelia = AureliaCharacterClient(
         base_url=os.environ.get("AURELIA_URL", "http://127.0.0.1:5000")
     )
-    return create_api_app(aurelia, simulation_runtime=runtime)
+    app = create_api_app(aurelia, simulation_runtime=runtime)
+
+    async def close_resources() -> None:
+        await aurelia.close()
+        await runtime.close()
+
+    app.add_event_handler("shutdown", close_resources)
+    return app
 
 
 def main() -> None:
