@@ -47,7 +47,7 @@ class PlannedMotion:
 
 
 class RobotController:
-    """Cartesian planning facade for the simulation/reference robot model."""
+    """Planning facade for the simulation/reference robot model."""
 
     def __init__(self, model: RobotModel) -> None:
         self.model = model
@@ -68,14 +68,29 @@ class RobotController:
             gripper_deg=gripper_deg,
             seed_deg=current_joints_deg,
         )
-        target_joints = solution.as_dict()
+        return self.plan_joint_targets(
+            current_joints_deg=current_joints_deg,
+            target_joints_deg=solution.as_dict(),
+            sample_period_s=sample_period_s,
+        )
+
+    def plan_joint_targets(
+        self,
+        *,
+        current_joints_deg: dict[str, float],
+        target_joints_deg: dict[str, float],
+        sample_period_s: float = 0.02,
+    ) -> PlannedMotion:
+        """Plan an exact bounded joint goal and derive its Cartesian terminal pose."""
+        self.model.validate_joint_positions(current_joints_deg)
+        self.model.validate_joint_positions(target_joints_deg)
         trajectory = self.trajectory.generate(
             current_joints_deg,
-            target_joints,
+            target_joints_deg,
             sample_period_s=sample_period_s,
         )
         return PlannedMotion(
-            target_pose=target_pose,
-            target_joints_deg=target_joints,
+            target_pose=self.kinematics.forward(target_joints_deg),
+            target_joints_deg=dict(target_joints_deg),
             trajectory=trajectory,
         )
