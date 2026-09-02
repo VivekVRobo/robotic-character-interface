@@ -64,7 +64,9 @@ async def run_benchmark(repetitions: int) -> dict[str, object]:
                     if cycles % 12 == 0:
                         await runtime.estop()
                         if not runtime.reset_estop():
-                            raise RuntimeError("simulation E-stop failed to reset during soak benchmark")
+                            raise RuntimeError(
+                                "simulation E-stop failed to reset during soak benchmark"
+                            )
                         estop_recoveries += 1
 
         diagnostics = await runtime.diagnostics()
@@ -108,7 +110,9 @@ async def run_benchmark(repetitions: int) -> dict[str, object]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run deterministic RCI digital-twin soak benchmark")
+    parser = argparse.ArgumentParser(
+        description="Run deterministic RCI digital-twin soak benchmark"
+    )
     parser.add_argument("--repetitions", type=int, default=3)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
