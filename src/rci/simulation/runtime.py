@@ -40,6 +40,18 @@ class SimulationExecutionReport:
     physical_motion: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class SimulationDiagnostics:
+    connected: bool
+    system_state: WireSystemState
+    estop_latched: bool
+    heartbeat_healthy: bool
+    last_acknowledged_sequence: int | None
+    sent_count: int
+    acknowledged_count: int
+    rejected_count: int
+
+
 class SimulationRuntime:
     """Authoritative software-only embodiment runtime for the reference digital twin."""
 
@@ -69,6 +81,21 @@ class SimulationRuntime:
 
     def telemetry(self) -> RobotTelemetry:
         return self.twin.telemetry()
+
+    async def diagnostics(self) -> SimulationDiagnostics:
+        gateway, _device = await self._ensure_started()
+        snapshot = gateway.snapshot()
+        lifecycle = self.supervisor.lifecycle_snapshot()
+        return SimulationDiagnostics(
+            connected=snapshot.is_open,
+            system_state=self.twin.state.state,
+            estop_latched=lifecycle.estop_latched,
+            heartbeat_healthy=lifecycle.watchdog_healthy,
+            last_acknowledged_sequence=snapshot.last_acknowledged_sequence,
+            sent_count=snapshot.sent_count,
+            acknowledged_count=snapshot.acknowledged_count,
+            rejected_count=snapshot.rejected_count,
+        )
 
     async def execute_behavior(self, intent: BehaviorIntent) -> SimulationExecutionReport:
         async with self._execution_lock:
