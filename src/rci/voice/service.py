@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import replace
 from math import sqrt
-from typing import Sequence
 
 from rci.domain.enums import VoiceState
 from rci.voice.models import SpeechPlan, VoiceTranscript
@@ -54,7 +54,12 @@ class SimulationVoiceBackend:
 class VoiceService:
     """Stateful voice-turn coordinator with explicit barge-in behavior."""
 
-    def __init__(self, backend: SimulationVoiceBackend | None = None, *, barge_in: bool = True) -> None:
+    def __init__(
+        self,
+        backend: SimulationVoiceBackend | None = None,
+        *,
+        barge_in: bool = True,
+    ) -> None:
         self.backend = SimulationVoiceBackend() if backend is None else backend
         self.barge_in = barge_in
         self.state = VoiceState.IDLE
