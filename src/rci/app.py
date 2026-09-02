@@ -31,7 +31,7 @@ def build_app() -> FastAPI:
         await aurelia.close()
         await runtime.close()
 
-    app.add_event_handler("shutdown", close_resources)
+    app.router.add_event_handler("shutdown", close_resources)
     return app
 
 
