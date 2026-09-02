@@ -50,6 +50,9 @@ class SimulationDiagnostics:
     sent_count: int
     acknowledged_count: int
     rejected_count: int
+    simulation_only: bool = True
+    hardware_verified: bool = False
+    physical_motion_enabled: bool = False
 
 
 class SimulationRuntime:
