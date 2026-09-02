@@ -7,6 +7,8 @@ from math import ceil, sqrt
 from rci.robotics.model import RobotModel
 from rci.robotics.models import JointTrajectory, TrajectorySample
 
+_PLANNING_SAFETY_MARGIN = 1.000001
+
 
 class TrajectoryError(ValueError):
     """Raised when a requested reference-model trajectory is invalid."""
@@ -21,8 +23,9 @@ class TrajectoryGenerator:
 
         MotionSafetyPolicy currently exposes one global velocity and acceleration
         limit, so trajectories use the strictest predicted joint limits for every
-        joint. This is intentionally conservative and keeps planning aligned with
-        the safety supervisor instead of weakening the supervisor for simulation.
+        joint. A tiny deterministic duration margin keeps generated dynamics
+        strictly below the fail-closed comparator instead of relying on floating-
+        point equality at the safety boundary.
         """
         self.model.validate_joint_positions(start_deg)
         self.model.validate_joint_positions(target_deg)
@@ -40,7 +43,7 @@ class TrajectoryGenerator:
             velocity_bound = 1.5 * delta / global_velocity_limit
             acceleration_bound = sqrt(6.0 * delta / global_acceleration_limit)
             duration = max(duration, velocity_bound, acceleration_bound)
-        return max(duration, 0.05)
+        return max(duration, 0.05) * _PLANNING_SAFETY_MARGIN
 
     def generate(
         self,
