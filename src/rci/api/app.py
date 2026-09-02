@@ -47,7 +47,7 @@ def create_api_app(
 ) -> FastAPI:
     """Create an API that cannot directly emit actuator or joint commands."""
     service = InteractionService(character_engine)
-    app = FastAPI(title="Robotic Character Interface", version="0.1.0-dev0")
+    app = FastAPI(title="Robotic Character Interface", version="0.1.0")
 
     @app.get("/api/status", response_model=StatusResponse)
     async def status() -> StatusResponse:
