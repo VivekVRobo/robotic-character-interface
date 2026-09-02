@@ -51,10 +51,7 @@ def test_trajectory_honors_strictest_global_reference_dynamics() -> None:
     )
 
     for sample in planned.trajectory.samples:
+        assert all(abs(value) < velocity_limit for value in sample.velocities_deg_s.values())
         assert all(
-            abs(value) < velocity_limit for value in sample.velocities_deg_s.values()
-        )
-        assert all(
-            abs(value) < acceleration_limit
-            for value in sample.accelerations_deg_s2.values()
+            abs(value) < acceleration_limit for value in sample.accelerations_deg_s2.values()
         )
