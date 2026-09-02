@@ -11,7 +11,8 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def _model() -> RobotModel:
-    return RobotModel(load_reference_profile(ROOT / "configs" / "simulation" / "reference_arm.yaml"))
+    profile = ROOT / "configs" / "simulation" / "reference_arm.yaml"
+    return RobotModel(load_reference_profile(profile))
 
 
 def _intent(cue: MotionCue, style: MotionStyle = MotionStyle.RESTRAINED) -> BehaviorIntent:
