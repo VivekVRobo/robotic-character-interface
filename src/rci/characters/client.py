@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Protocol
 
 import httpx
 
@@ -13,6 +13,10 @@ from rci.cognition.meaning import MeaningFrame
 
 class CharacterEngineError(RuntimeError):
     """Raised when a character engine cannot return a publishable RCI contract."""
+
+
+class CharacterEngine(Protocol):
+    async def respond(self, frame: MeaningFrame) -> CharacterResponseV1: ...
 
 
 class AureliaCharacterClient:
