@@ -50,7 +50,11 @@ class MultimodalCorrelator:
             if age_ms <= self.gesture_correlation_window_ms:
                 correlated_gesture = gesture.gesture
                 simulation = simulation or gesture.simulation
-                confidence = gesture.confidence if not normalized_text else min(confidence, gesture.confidence)
+                confidence = (
+                    gesture.confidence
+                    if not normalized_text
+                    else min(confidence, gesture.confidence)
+                )
 
         return MeaningFrame(
             text=normalized_text,
