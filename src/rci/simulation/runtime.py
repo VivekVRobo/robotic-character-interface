@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -138,8 +139,7 @@ class SimulationRuntime:
             return True
         self.twin.reset_estop()
         self.supervisor.observe_heartbeat_age(0.0)
-        result = self.supervisor.request_manual_reset()
-        return result.reset
+        return self.supervisor.request_manual_reset().cleared
 
     async def _ensure_started(self) -> tuple[RobotGateway, DigitalTwinProtocolDevice]:
         async with self._start_lock:
@@ -157,16 +157,11 @@ class SimulationRuntime:
     @staticmethod
     async def _request_with_device(
         device: DigitalTwinProtocolDevice,
-        request: asyncio.Future[GatewayReceipt] | asyncio.Task[GatewayReceipt] | object,
+        request: Awaitable[GatewayReceipt],
     ) -> GatewayReceipt:
-        async def await_request() -> GatewayReceipt:
-            if hasattr(request, "__await__"):
-                return await request  # type: ignore[misc]
-            raise TypeError("gateway request must be awaitable")
-
         device_task = asyncio.create_task(device.serve_once())
         try:
-            receipt = await await_request()
+            receipt = await request
             await device_task
             return receipt
         except Exception:
