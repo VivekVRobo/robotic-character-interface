@@ -5,7 +5,12 @@ from __future__ import annotations
 from rci.protocols.messages import GloveTelemetry
 
 
-def synthetic_tilt(*, roll_deg: float = 0.0, pitch_deg: float = 0.0, time_ms: int = 0) -> GloveTelemetry:
+def synthetic_tilt(
+    *,
+    roll_deg: float = 0.0,
+    pitch_deg: float = 0.0,
+    time_ms: int = 0,
+) -> GloveTelemetry:
     return GloveTelemetry(
         device_time_ms_mod=time_ms & 0xFFFF,
         accel_x_mg=0,
