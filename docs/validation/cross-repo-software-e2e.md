@@ -20,7 +20,7 @@ Real AureliaCognitiveRuntime cycle
   -> ACK/NACK
 ```
 
-The integration job checks out the current `main` branch of `vasu4990/Aurelia-Chan-Source` alongside the RCI pull-request revision, so contract drift between the repositories fails CI.
+The integration job checks out the current `main` branch of `VivekVRobo/Aurelia-Chan-Source` alongside the RCI pull-request revision, so contract drift between the repositories fails CI.
 
 ## Important boundary
 
