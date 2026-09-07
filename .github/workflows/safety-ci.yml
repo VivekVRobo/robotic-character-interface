@@ -13,6 +13,8 @@ jobs:
           python-version: '3.12'
       - run: pip install -e '.[dev]'
       - run: pytest tests/contract tests/safety
+      - name: Deterministic motion-safety evidence campaign
+        run: python tools/run_safety_evidence.py --output reports/simulation/ci-safety-evidence.json
       - name: Cross-language protocol golden vectors
         run: |
           g++ -std=c++17 -Wall -Wextra -Werror -pedantic \
@@ -33,3 +35,9 @@ jobs:
           g++ -std=c++17 -Wall -Wextra -Werror -pedantic \
             tests/contract/single_servo_hil_guard.cpp -o /tmp/rci_single_servo_hil_guard
           /tmp/rci_single_servo_hil_guard
+      - name: Upload safety evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: rci-motion-safety-evidence
+          path: reports/simulation/ci-safety-evidence.json
+          if-no-files-found: error

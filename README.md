@@ -51,11 +51,13 @@ No AI, character, gesture, API, or frontend component may directly control actua
 A release requires all four GitHub Actions gates green on the same commit:
 
 - **Backend CI** — Ruff, formatting, strict mypy, unit tests, deterministic digital-twin soak benchmark.
-- **Safety and Contract CI** — safety regressions, protocol vectors, compiled C++ robot runtime and HIL guard.
+- **Safety and Contract CI** — safety regressions, machine-readable motion-safety challenge evidence, protocol vectors, compiled C++ robot runtime and HIL guard.
 - **Frontend CI** — TypeScript typecheck, React/Vitest tests, production build.
 - **Cross-Repo Software E2E** — real Aurelia + RCI integration, compiled firmware validation, adversarial faults, and final digital-twin execution.
 
-Backend CI uploads the deterministic `rci-simulation-benchmark` artifact. See `docs/SOFTWARE_RELEASE.md` and `reports/simulation/README.md`.
+Backend CI uploads the deterministic `rci-simulation-benchmark` artifact. Safety CI uploads `rci-motion-safety-evidence`, a nine-case production-model challenge report covering approval, state gating, E-stop, joint/workspace limits, freshness, velocity and acceleration limits. Both artifacts remain explicitly simulation-only and hardware-unverified.
+
+See `docs/SOFTWARE_RELEASE.md`, `docs/validation/V005_FAULT_CAMPAIGN.md`, `docs/validation/V006_SAFETY_EVIDENCE.md`, and `reports/simulation/README.md`.
 
 ## Run the simulation service
 
