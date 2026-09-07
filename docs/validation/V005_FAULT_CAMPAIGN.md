@@ -1,6 +1,6 @@
 # V005 Integrated Adversarial Fault Campaign
 
-V005 is the final software-only validation gate before any single-servo hardware-in-the-loop work.
+V005 is the cross-repository software fault gate before any single-servo hardware-in-the-loop work.
 
 The campaign attacks the same cross-repository path proven by V004:
 
@@ -18,7 +18,9 @@ AureliaCognitiveRuntime
   -> ACK / NACK
 ```
 
-The production RobotModel/Motion Planner is still not implemented. The synthetic pose and verified envelope used by these tests exist only in the software-validation test process and are not hardware calibration evidence.
+The repository now also contains a production `RobotModel`, kinematics, trajectory generation, `RobotController`, behavior embodiment planner and an end-to-end digital-twin runtime. V005 intentionally retains its small test-only pose fixture because its purpose is to isolate cross-repository contract, gateway, replay and compiled-firmware fault behavior. The production-model safety path is exercised separately by the simulation runtime and the machine-readable V006 safety evidence campaign.
+
+The V005 pose/envelope fixture remains software-validation data only and is not hardware calibration evidence.
 
 ## Required adversarial cases
 
@@ -62,3 +64,5 @@ It does **not** prove:
 - actuator accuracy, repeatability, torque, thermal behavior, or mechanical limits.
 
 Those claims remain blocked until the later physical HIL and measurement milestones.
+
+See [`V006_SAFETY_EVIDENCE.md`](V006_SAFETY_EVIDENCE.md) for the production-model motion-safety evidence artifact.
