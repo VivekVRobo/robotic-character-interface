@@ -24,6 +24,11 @@ def test_frame_rejects_unsupported_version() -> None:
         Frame.decode(bytes(encoded))
 
 
+def test_frame_rejects_invalid_message_type_at_construction() -> None:
+    with pytest.raises(ProtocolError, match="message_type"):
+        Frame(0xFE, 1)
+
+
 def test_frame_rejects_unknown_type() -> None:
     encoded = bytearray(Frame(MessageType.ACK, 1, b"").encode())
     encoded[3] = 0xFE
