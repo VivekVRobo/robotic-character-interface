@@ -29,6 +29,8 @@ class Frame:
     payload: bytes = b""
 
     def __post_init__(self) -> None:
+        if not isinstance(self.message_type, MessageType):
+            raise ProtocolError("message_type must be a valid MessageType")
         if not 0 <= self.sequence <= 0xFFFF:
             raise ProtocolError("sequence must fit uint16")
         if len(self.payload) > MAX_PAYLOAD_SIZE:

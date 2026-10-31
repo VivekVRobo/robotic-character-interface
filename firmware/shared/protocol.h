@@ -34,6 +34,21 @@ enum class MessageType : uint8_t {
   kRobotTelemetry = 0x07,
 };
 
+inline bool IsValidMessageType(MessageType type) {
+  switch (type) {
+    case MessageType::kGloveTelemetry:
+    case MessageType::kHeartbeat:
+    case MessageType::kValidatedMotionCommand:
+    case MessageType::kEstop:
+    case MessageType::kAck:
+    case MessageType::kNack:
+    case MessageType::kRobotTelemetry:
+      return true;
+    default:
+      return false;
+  }
+}
+
 enum class AckStatus : uint8_t {
   kOk = 0x00,
   kRejected = 0x01,
@@ -188,8 +203,8 @@ inline size_t BuildFrame(MessageType type,
                          uint8_t* out,
                          size_t capacity) {
   const size_t frame_size = kFrameOverhead + payload_length;
-  if (out == nullptr || payload_length > kMaxPayloadSize || capacity < frame_size ||
-      (payload_length > 0 && payload == nullptr)) {
+  if (out == nullptr || !IsValidMessageType(type) || payload_length > kMaxPayloadSize ||
+      capacity < frame_size || (payload_length > 0 && payload == nullptr)) {
     return 0;
   }
 

@@ -49,5 +49,14 @@ int main() {
   if (frame_crc != rci::protocol::Crc16CcittFalse(frame, 29)) {
     return 6;
   }
+  if (rci::protocol::BuildFrame(
+          static_cast<rci::protocol::MessageType>(0xFEu),
+          0u,
+          nullptr,
+          0u,
+          frame,
+          sizeof(frame)) != 0u) {
+    return 7;
+  }
   return 0;
 }
