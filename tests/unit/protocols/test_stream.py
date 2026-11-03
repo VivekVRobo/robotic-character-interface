@@ -32,6 +32,34 @@ def test_stream_decoder_extracts_multiple_frames_from_one_chunk() -> None:
     assert batch.issues == ()
 
 
+def test_stream_decoder_preserves_max_frame_when_next_chunk_crosses_buffer_limit() -> None:
+    decoder = FrameStreamDecoder()
+    first = Frame(MessageType.ACK, 1, b"x" * MAX_PAYLOAD_SIZE)
+    second = Frame(MessageType.HEARTBEAT, 2, b"y" * 128)
+    wire = first.encode() + second.encode()
+
+    # Simulate normal transport reads: the first chunk leaves a maximum-size
+    # frame incomplete, and the next 128-byte read makes buffer+chunk exceed
+    # the configured limit even though both frames are valid.
+    prefix_size = 512
+    first_batch = decoder.feed(wire[:prefix_size])
+    assert first_batch.frames == ()
+    assert first_batch.buffered_bytes == prefix_size
+
+    next_chunk = wire[prefix_size : prefix_size + 128]
+    assert len(next_chunk) == 128
+    batch = decoder.feed(next_chunk)
+
+    assert batch.frames == (first,)
+    assert batch.buffered_bytes == 118
+    assert batch.buffered_bytes <= decoder.max_buffer_bytes
+    assert not any(issue.kind == StreamIssueKind.BUFFER_OVERFLOW for issue in batch.issues)
+
+    final_batch = decoder.feed(wire[prefix_size + 128 :])
+    assert final_batch.frames == (second,)
+    assert final_batch.buffered_bytes == 0
+
+
 def test_stream_decoder_reports_garbage_and_recovers_valid_frame() -> None:
     expected = Frame(MessageType.ACK, 9, b"ok")
     batch = FrameStreamDecoder().feed(b"noise" + expected.encode())
