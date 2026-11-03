@@ -63,19 +63,56 @@ class FrameStreamDecoder:
         frames: list[Frame] = []
         issues: list[StreamIssue] = []
 
-        if len(self._buffer) + len(data) > self.max_buffer_bytes:
+        # Keep the existing hard limit for a single oversized input chunk. For
+        # ordinary transport reads, however, the existing partial frame plus the
+        # next chunk can exceed the limit even when the chunk itself is valid.
+        # Append those reads incrementally and drain complete frames between
+        # appends instead of discarding a valid frame at the chunk boundary.
+        if len(data) > self.max_buffer_bytes:
             discarded = len(self._buffer) + len(data)
             self._buffer.clear()
             issues.append(
                 StreamIssue(
                     StreamIssueKind.BUFFER_OVERFLOW,
-                    "stream buffer limit exceeded; buffered data discarded",
+                    "input chunk exceeds stream buffer limit; buffered data discarded",
                     discarded,
                 )
             )
             return DecodeBatch((), tuple(issues), 0)
 
-        self._buffer.extend(data)
+        offset = 0
+        while offset < len(data):
+            available = self.max_buffer_bytes - len(self._buffer)
+            if available <= 0:
+                before = len(self._buffer)
+                self._drain(frames, issues)
+                available = self.max_buffer_bytes - len(self._buffer)
+                if available <= 0:
+                    # Defensive fallback: a full buffer that cannot be parsed
+                    # must not cause an infinite loop or unbounded accumulation.
+                    discarded = len(self._buffer)
+                    self._buffer.clear()
+                    issues.append(
+                        StreamIssue(
+                            StreamIssueKind.BUFFER_OVERFLOW,
+                            "stream buffer limit reached without decoder progress",
+                            discarded,
+                        )
+                    )
+                    available = self.max_buffer_bytes
+                elif len(self._buffer) == before:
+                    # A parser state that does not consume data at capacity is
+                    # unexpected; the next iteration can safely use the space.
+                    continue
+
+            count = min(available, len(data) - offset)
+            self._buffer.extend(data[offset : offset + count])
+            offset += count
+            self._drain(frames, issues)
+
+        return DecodeBatch(tuple(frames), tuple(issues), len(self._buffer))
+
+    def _drain(self, frames: list[Frame], issues: list[StreamIssue]) -> None:
         while True:
             if len(self._buffer) < len(MAGIC):
                 break
@@ -160,8 +197,6 @@ class FrameStreamDecoder:
 
             frames.append(frame)
             del self._buffer[:frame_size]
-
-        return DecodeBatch(tuple(frames), tuple(issues), len(self._buffer))
 
     @staticmethod
     def _validate_header(version: int, raw_type: int, payload_length: int) -> str | None:
