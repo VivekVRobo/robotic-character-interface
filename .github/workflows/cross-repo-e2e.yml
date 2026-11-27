@@ -4,6 +4,13 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      aurelia_ref:
+        description: "Aurelia branch, tag, or commit SHA to validate against"
+        required: true
+        default: "main"
+        type: string
 
 jobs:
   aurelia-rci-e2e:
@@ -18,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: VivekVRobo/Aurelia-Chan-Source
-          ref: main
+          ref: ${{ github.event.inputs.aurelia_ref || 'main' }}
           path: aurelia
 
       - name: Set up Python
